@@ -1,0 +1,134 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { financetelli } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'Business Intelligence',
+  title: 'Sales Insights Dashboard',
+  description: 'An interactive Power BI dashboard analyzing sales trends across 15+ cities and 38 stores in India, tracking KPIs like Revenue, Sales, and Profit Margins.',
+  image: financetelli,
+  date: '2024-05',
+  service: 'Data Analytics · Power BI',
+  url: 'https://github.com/AdityaIITBHU26/Sales-Insights-Dashboard-Power-BI-SQL',
+  pathname: '/apps/sales-dashboard',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Problem Statement', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'Power BI', image: '/logos/powerbi-logo.png' },
+  { name: 'SQL', image: '/logos/postgres-logo.png' },
+  { name: 'MySQL', image: '/logos/postgres-logo.png' },
+  { name: 'Python', image: '/logos/python-logo.png' },
+  { name: 'Pandas', image: '/logos/python-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  This project was built to help a hardware business understand its sales performance across multiple regions in India. The business had raw transaction data spanning FY 2017–2020 across 15+ cities and 38 stores but lacked a visual tool to make sense of it.
+
+  The goal was to transform this raw data into a dynamic, interactive dashboard that decision-makers could actually use — no data science background required.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Problem Statement
+
+  The AtliQ hardware company needed answers to questions like:
+
+  1. Which cities and stores are generating the most revenue?
+  2. How are sales trending year-over-year from FY 2017 to FY 2020?
+  3. Which product categories have the best profit margins?
+  4. Where are the underperforming stores pulling down overall numbers?
+
+  The raw data existed in a MySQL database but there was no visual layer on top of it for business stakeholders to explore.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**Data Pipeline:** Connected Power BI directly to a MySQL database, wrote SQL queries to clean and join the relevant tables — transactions, customers, markets, products, and date dimensions.
+
+**ETL in Power Query:** Filtered invalid records (negative sales values, test transactions), normalized currency across regions, and removed duplicate entries to ensure data quality.
+
+**Dashboard Design:** Built a multi-page Power BI report with:
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Revenue Trend View:</strong> Line chart showing monthly and yearly revenue from FY 2017–2020, with slicers to filter by region and product category.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">KPI Cards:</strong> Summary tiles for Total Revenue, Total Sales Quantity, and Profit Margin % — updating dynamically with every filter selection.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">City & Store Breakdown:</strong> Bar charts ranking all 15+ cities and 38 stores by revenue contribution, making it easy to spot top performers and laggards instantly.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Profit Margin Analysis:</strong> Scatter plot mapping sales quantity vs. profit margin per product, exposing high-volume but low-margin items.
+    </span>
+  </li>
+</ul>
+
+**Outcome:** The final dashboard gave business stakeholders a single source of truth for sales performance, replacing weekly manual Excel reports with a live, self-service analytics tool.
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>

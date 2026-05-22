@@ -1,0 +1,126 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { realtorSimplified } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'Data Engineering / Analytics',
+  title: 'Ecommerce Data Modelling',
+  description: 'A Snowflake Schema data model for an ecommerce platform with complete SQL analytics, optimized query design, and data visualization for business decision-making.',
+  image: realtorSimplified,
+  date: '2023-05',
+  service: 'Data Modelling · SQL Analytics',
+  url: 'https://github.com/AdityaIITBHU26/Ecommerce-Data-Modelling',
+  pathname: '/apps/ecommerce-modelling',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Challenge', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'Python', image: '/logos/python-logo.png' },
+  { name: 'SQL', image: '/logos/postgres-logo.png' },
+  { name: 'Pandas', image: '/logos/python-logo.png' },
+  { name: 'NumPy', image: '/logos/python-logo.png' },
+  { name: 'Matplotlib', image: '/logos/python-logo.png' },
+  { name: 'MySQL', image: '/logos/postgres-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  This project models the backend data layer of an ecommerce platform — from raw database design to analytical queries. The aim was to practice real-world data engineering skills: designing schemas, defining relationships, generating sample data, and extracting business insights through SQL and Python visualization.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Challenge
+
+  Design a production-grade database schema for an ecommerce system that handles:
+
+  1. Products with multiple categories and sub-categories.
+  2. Customers with order history and address management.
+  3. Orders with line items, discounts, and fulfillment status.
+  4. A schema optimized for analytics queries — not just transactional reads.
+  5. Python-driven data generation, insertion, and visualization pipeline.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**Schema Design — Snowflake Model:** Designed a Snowflake Schema (normalized star schema) to separate dimension tables across Products, Categories, Customers, Addresses, Orders, and OrderItems. Primary/Foreign Key relationships were explicitly defined to enforce referential integrity.
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Sample Data Generation:</strong> Used Python (Faker + Pandas) to generate realistic sample datasets — 10,000+ customers, 5,000+ products across 20 categories, and 50,000+ order records — then bulk-inserted them into MySQL via SQLAlchemy.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Analytical SQL Queries:</strong> Wrote complex SQL queries for business KPIs — monthly revenue by category, top 10 customers by lifetime value, order fulfillment rate, product return analysis, and seasonal demand trends.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Query Optimization:</strong> Applied indexing on frequently joined columns (customer_id, product_id, order_date), reducing query execution time by ~40% on large result sets.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Python Visualization:</strong> Pulled query results via Python's MySQL connector and built Matplotlib/Seaborn charts — revenue trends, category distribution pie charts, and customer segmentation scatter plots.
+    </span>
+  </li>
+</ul>
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>

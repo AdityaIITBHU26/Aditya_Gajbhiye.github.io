@@ -1,0 +1,126 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { leenithBorges } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'EdTech / Startup',
+  title: 'MentorQ Pro',
+  description: 'An education startup platform connecting JEE and NEET aspirants with IITian and AIIMS doctor mentors — built from scratch with a responsive website, mentor-mentee matching, and student lead generation.',
+  image: leenithBorges,
+  date: '2024-04',
+  service: 'EdTech Startup · Web Platform',
+  url: 'https://github.com/YOUR-GITHUB-USERNAME/mentorq-pro',
+  pathname: '/apps/mentorq',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Challenge', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'HTML5', image: '/logos/html5-logo.png' },
+  { name: 'CSS3', image: '/logos/css-logo.png' },
+  { name: 'JavaScript', image: '/logos/js-logo.png' },
+  { name: 'ReactJS', image: '/logos/react-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  MentorQ Pro (originally GuideUp) is an education startup co-founded while studying at IIT BHU. The core idea: every JEE and NEET aspirant deserves access to a mentor who has already cracked those exams. The platform matches students with IITians and AIIMS doctors for one-on-one mentoring sessions — structured, affordable, and personalised.
+
+  As co-founder, responsibilities spanned product design, website development, user acquisition strategy, and mentor onboarding.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Challenge
+
+  Build and launch an MVP platform that could:
+
+  1. Let students browse available mentors and book sessions.
+  2. Allow mentors (IITians, AIIMS students) to register and list their availability.
+  3. Generate student leads organically through SEO and referral loops.
+  4. Work on mobile — most users in the target demographic use phones, not laptops.
+  5. Launch fast — the JEE/NEET exam calendar is unforgiving; timing matters.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**Responsive Website:** Designed and developed a mobile-first responsive website using React.js — mentor profile cards, student registration forms, and a simple booking flow. Deployed and live within 3 weeks of the idea.
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Mentor Profiles:</strong> Each IITian/AIIMS mentor gets a structured profile page — their college, branch, JEE/NEET rank, subjects they cover, session price, and available slots. Students can filter by exam type and subject.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Lead Generation System:</strong> Built a lightweight lead capture form that collects student name, exam target, current grade, and contact — stored and routed to the right mentor automatically via email notification.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">User Acquisition:</strong> Ran WhatsApp-based referral campaigns targeting JEE coaching centre communities and NEET aspirant groups. Each mentor shared their profile link within their own networks — bootstrapping reach without paid ads.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Startup Learnings:</strong> Gained hands-on experience with product-market fit conversations, user retention challenges (students drop off after their first exam attempt), pricing strategy for tier-2/3 city students, and the difficulty of scaling two-sided marketplaces with no funding.
+    </span>
+  </li>
+</ul>
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>

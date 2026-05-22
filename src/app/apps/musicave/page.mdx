@@ -1,0 +1,127 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { loteriaMonarca } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'Entertainment / Web Development',
+  title: 'MusiCave',
+  description: 'A fully functional music streaming web application with an intelligent song recommendation system, streaming, downloading, and digital wellbeing tools.',
+  image: loteriaMonarca,
+  date: '2024-08',
+  service: 'Full-Stack Web Application',
+  url: 'https://github.com/YOUR-GITHUB-USERNAME/musicave',
+  pathname: '/apps/musicave',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Challenge', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'Node.js', image: '/logos/nodejs-logo.png' },
+  { name: 'Express.js', image: '/logos/express-logo.png' },
+  { name: 'JavaScript', image: '/logos/js-logo.png' },
+  { name: 'Handlebars', image: '/logos/js-logo.png' },
+  { name: 'REST APIs', image: '/logos/nodejs-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  MusiCave is a music streaming web application built from scratch as a personal project to deepen hands-on experience with Node.js, Express.js, and RESTful API design. The app provides a seamless music listening experience with smart recommendations built on top of the currently playing track.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Challenge
+
+  The goal was to build a complete, production-like music streaming experience — not just a basic CRUD app. Key requirements included:
+
+  1. Stream and download songs and albums without page reloads.
+  2. Show popular albums and allow users to search for songs, albums, and artists.
+  3. Recommend songs in real-time based on what is currently playing.
+  4. Include digital wellbeing features — listening time awareness and session limits.
+  5. Support a shuffle mode that plays random songs independently of playlist history.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**Backend Architecture:** Built with Node.js and Express.js, exposing a clean REST API for all music data — songs, albums, artists, and recommendations. Handlebars was used for server-side rendering of views.
+
+**Recommendation Engine:** Implemented a content-based recommendation system that reads the metadata (genre, artist, tags) of the currently playing track and returns similar songs from the catalog in real-time — no external ML library needed, pure logic.
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Streaming & Download:</strong> Songs and albums are served via streaming endpoints so the browser plays audio progressively without waiting for a full download. A separate endpoint handles file downloads.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Search:</strong> A search API accepts keyword queries and returns ranked results across songs, albums, and artists using string matching and simple relevance scoring.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Digital Wellbeing:</strong> A client-side timer tracks cumulative listening time per session and prompts the user to take a break after a configurable threshold — inspired by YouTube's digital wellbeing feature.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Shuffle Mode:</strong> A true shuffle that samples randomly from the full catalog rather than the current playlist — so users always discover something new, independent of listening history.
+    </span>
+  </li>
+</ul>
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>

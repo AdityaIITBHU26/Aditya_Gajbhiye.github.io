@@ -1,0 +1,131 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { sierraEcomaderas } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'Systems Programming / OS',
+  title: 'CPU Scheduler Simulator',
+  description: 'A C++ CPU scheduling simulator implementing FCFS, Round Robin, Rate Monotonic Scheduling, and Earliest Deadline First — with comparative performance analysis across all four algorithms.',
+  image: sierraEcomaderas,
+  date: '2024-01',
+  service: 'C++ · Operating Systems · DSA',
+  url: 'https://github.com/YOUR-GITHUB-USERNAME/cpu-scheduler',
+  pathname: '/apps/cpu-scheduler',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Challenge', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'C++', image: '/logos/csharp-logo.png' },
+  { name: 'OOP', image: '/logos/csharp-logo.png' },
+  { name: 'DSA', image: '/logos/csharp-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  This project is a C++ simulation of four fundamental CPU scheduling algorithms used in modern Operating Systems. Rather than just implementing one algorithm, the simulator runs all four on the same process set and produces a comparative analysis — making it a practical study tool for understanding OS scheduling trade-offs.
+
+  Built as part of an Operating Systems course project, this deepened understanding of how real-world schedulers balance throughput, fairness, and deadline guarantees.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Challenge
+
+  Implement all four major CPU scheduling paradigms in a single unified simulator:
+
+  1. **FCFS (First Come First Serve)** — the simplest non-preemptive baseline.
+  2. **Round Robin (RR)** — preemptive with a configurable time quantum.
+  3. **Rate Monotonic Scheduling (RMS)** — priority-based for real-time periodic tasks.
+  4. **Earliest Deadline First (EDF)** — dynamic priority for hard real-time systems.
+
+  Then visualize the scheduling sequence for each and compare metrics like average waiting time, turnaround time, and CPU utilization.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**Unified Process Model:** Defined a `Process` struct holding burst time, arrival time, period, and deadline — flexible enough to work across all four scheduling models without duplication.
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">FCFS:</strong> Non-preemptive queue implementation. Processes execute in arrival order to completion. Simple but shows how convoy effect degrades performance with mixed burst-time processes.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Round Robin:</strong> Circular ready queue with a configurable time quantum (Q). Processes are preempted after Q units and placed back at the tail — balancing fairness with context-switch overhead, visible in the comparison output.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Rate Monotonic Scheduling (RMS):</strong> Static priority assignment — shorter period = higher priority. A preemptive priority queue drives execution. The simulator validates schedulability using the Liu & Layland bound (U ≤ n(2^(1/n) − 1)).
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Earliest Deadline First (EDF):</strong> Dynamic priority — the process with the nearest absolute deadline always runs next. Priority queue is re-evaluated at every preemption point. Achieves 100% CPU utilization for feasible task sets.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Sequence Visualization & Comparison:</strong> Each algorithm outputs a Gantt-style text timeline showing execution order. A final comparison table prints average waiting time, turnaround time, and CPU utilization side-by-side for the same process set.
+    </span>
+  </li>
+</ul>
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>

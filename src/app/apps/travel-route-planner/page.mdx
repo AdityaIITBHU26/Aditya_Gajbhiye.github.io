@@ -1,0 +1,128 @@
+import { AppSolution, Border, Container, FadeIn, FadeInStagger, Section } from '@/components';
+import Image from 'next/image';
+import { template1 } from '../../../../public/projects';
+
+export const appData = {
+  industry: 'Algorithms / Systems',
+  title: 'Travel Route Planner',
+  description: 'A C++ OOP system that models countries, capitals, and travel routes — using Dijkstra\'s algorithm with custom comparators to find the shortest travel path, displayed visually on a map.',
+  image: template1,
+  date: '2024-03',
+  service: 'C++ · Graph Algorithms · Visualization',
+  url: 'https://github.com/YOUR-GITHUB-USERNAME/travel-route-planner',
+  pathname: '/apps/travel-route-planner',
+  framework: 'next',
+};
+
+export const sections = [
+  { index: 0, title: 'About', id: 'about' },
+  { index: 1, title: 'Challenge', id: 'challenge' },
+  { index: 2, title: 'Solution', id: 'solution' },
+  { index: 3, title: 'Technologies', id: 'technologies' },
+];
+
+export const metadata = {
+  title: `${appData.title}`,
+  description: appData.description,
+};
+
+export const technologies = [
+  { name: 'C++', image: '/logos/csharp-logo.png' },
+  { name: 'OOP', image: '/logos/csharp-logo.png' },
+  { name: 'Dijkstra\'s', image: '/logos/csharp-logo.png' },
+  { name: 'HTML', image: '/logos/html5-logo.png' },
+  { name: 'JavaScript', image: '/logos/js-logo.png' },
+  { name: 'CSV Parsing', image: '/logos/git-logo.png' },
+  { name: 'GitHub', image: '/logos/github-logo.webp' },
+];
+
+<Container>
+
+<Border className="my-8" />
+
+<Section id="about">
+  ## About
+
+  Travel Route Planner is a C++ application that models a real-world network of countries and their capitals, then finds the optimal travel path between any two destinations using Dijkstra's shortest path algorithm. The final path is rendered visually on a browser-based map using custom HTML and JavaScript.
+
+  This project bridges core computer science concepts — OOP, graph theory, file parsing — with a practical, visual output.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="challenge">
+  ## Challenge
+
+  Build a system that can:
+
+  1. Model a network of countries, capitals, and routes as a weighted graph.
+  2. Load real data from CSV files — no hardcoded values.
+  3. Find the shortest travel path using an efficient algorithm with proper C++ OOP design.
+  4. Display the result visually on a map — not just print it to the console.
+  5. Use operator overloading and custom comparators correctly within the graph logic.
+</Section>
+
+<Border className="my-8" />
+
+<Section id="solution">
+
+## Solution
+
+<AppSolution href={appData.url}>
+
+**OOP Architecture:** Designed a clean class hierarchy — `Country`, `Capital`, `Route`, and `Graph` — using encapsulation and proper separation of concerns. Each class owns its data and exposes only the necessary interface.
+
+<ul role="list" className="mt-6 space-y-8">
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">CSV File Parsing:</strong> A custom file reader parses country, capital, and route data from CSV files at runtime and populates the graph dynamically — no hardcoded geography in the source code.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Dijkstra's Algorithm:</strong> Implemented using a priority queue with a custom comparator (operator overloading) on the Route class to correctly order nodes by cumulative travel distance — achieving O((V + E) log V) time complexity.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Path Reconstruction:</strong> After Dijkstra's runs, a backtracking step reconstructs the full optimal path from source to destination by tracing predecessor nodes stored during traversal.
+    </span>
+  </li>
+  <li>
+    <span>
+      <strong className="font-semibold text-blue-100">Map Visualization:</strong> The C++ program outputs the shortest path as a JSON coordinate list, which a lightweight HTML + JavaScript page reads to render the route on a Leaflet.js map — giving a real visual result, not just a list of city names.
+    </span>
+  </li>
+</ul>
+
+</AppSolution>
+
+</Section>
+
+<Border className="my-8" />
+
+<Section id="technologies">
+
+## Technologies
+
+<FadeInStagger className="flex gap-4 mt-6 flex-wrap" faster once>
+  {technologies.map((tech) => (
+    <FadeIn key={tech.name}>
+      <div className="mt-auto">
+        <Image
+          src={tech.image}
+          className="object-contain rounded-md m-auto"
+          alt=""
+          height={64}
+          width={64}
+          style={{ width: 64, height: 64 }}
+        />
+        <h4 className="text-sm font-semibold tracking-tight text-[#525df3] text-center rounded-full w-min px-2 m-2 mx-auto">{tech.name}</h4>
+      </div>
+    </FadeIn>
+  ))}
+</FadeInStagger>
+
+</Section>
+
+</Container>
