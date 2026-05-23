@@ -1,3 +1,4 @@
+import BlogPosts from '@/components/BlogPosts';
 import { AboutMe, AnimatedTitle, Border, ContactForm, Container, FadeIn, GridPattern, MyWork, Section, SectionHeader, Skills, Socials, Stars, WorkExperience } from '@/components';
 import { Archive, BookOpen, BriefCase, Envelope } from '@/icons';
 
@@ -12,6 +13,7 @@ export const sections = [
   { index: 2, title: 'Skills', id: 'skills' },
   { index: 3, title: 'My Work', id: 'my-work' },
   { index: 4, title: 'Contact Me', id: 'contact' },
+  { index: 5, title: 'Blog', id: 'blog' },
 ];
 
 interface contentSection {
@@ -97,6 +99,26 @@ const content: contentSection[] = [
       ),
     },
     mainContent: <ContactForm />,
+  },
+  {
+  id: 'blog',
+  sectionHeader: {
+    icon: (
+      <>
+        <BookOpen height="28" width="28" />
+        <span className="bg-purple-400 icon-blur absolute inset-0 -z-10"></span>
+      </>
+    ),
+    title: 'Blog',
+    description: (
+      <div>
+        Writing about <span className="text-purple-400">data science</span>,{' '}
+        <span className="text-purple-400">engineering</span>, and lessons from{' '}
+        <span className="text-purple-400">building things</span>
+      </div>
+    ),
+  },
+  mainContent: <BlogPosts />,
   },
 ];
 
