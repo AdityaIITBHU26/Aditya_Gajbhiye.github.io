@@ -34,7 +34,23 @@ export const remarkPlugins = [
   remarkGfm,
   [
     unifiedConditional,
-    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/apps'))}`), [[remarkMDXLayout, '@/app/apps/wrapper', 'appData']]],
-    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/leetcode'))}`), [[remarkMDXLayout, '@/app/leetcode/wrapper', 'leetData']]],
+    // Apps (portfolio projects)
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/apps'))}`),
+      [[remarkMDXLayout, '@/app/apps/wrapper', 'appData']]],
+    // LeetCode
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/leetcode'))}`),
+      [[remarkMDXLayout, '@/app/leetcode/wrapper', 'leetData']]],
+    // Codeforces
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/codeforces'))}`),
+      [[remarkMDXLayout, '@/app/codeforces/wrapper', 'showcaseData']]],
+    // DA Showcase
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/da-showcase'))}`),
+      [[remarkMDXLayout, '@/app/da-showcase/wrapper', 'showcaseData']]],
+    // DS Showcase
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/ds-showcase'))}`),
+      [[remarkMDXLayout, '@/app/ds-showcase/wrapper', 'showcaseData']]],
+    // ML Showcase
+    [new RegExp(`^${escapeStringRegexp(path.resolve('src/app/ml-showcase'))}`),
+      [[remarkMDXLayout, '@/app/ml-showcase/wrapper', 'showcaseData']]],
   ],
 ];
