@@ -1,0 +1,198 @@
+import { Border, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Statistical Modeling',
+  description: 'Statistical analysis patterns — hypothesis testing, regression analysis, and probability distributions used in data science projects.',
+  pathname: '/ds-showcase/statistical-modeling',
+  framework: 'ds',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Hypothesis Testing', id: 'hypothesis-testing' },
+  { index: 2, title: 'Regression Analysis', id: 'regression' },
+  { index: 3, title: 'A/B Testing', id: 'ab-testing' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Statistical Modeling
+
+    Statistical thinking is what separates a data analyst from a spreadsheet user. These patterns cover the statistical tools used to validate business decisions — from A/B tests to regression models.
+
+    <Border className="mt-6" />
+    ### When statistics beats ML:
+
+    - Small datasets (< 1000 rows) — ML overfits, stats generalizes
+    - Interpretability required — stakeholders need to understand "why"
+    - Testing a specific hypothesis — not exploring patterns
+    - Regulatory environments — healthcare, finance require statistical evidence
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Hypothesis Testing
+
+    Used to answer: "Is this difference real, or just random noise?"
+
+    #### Example — Is revenue significantly different between North and South zones?
+
+    ```python
+    from scipy import stats
+    import numpy as np
+    import pandas as pd
+
+    north = df[df['zone'] == 'North']['sales_amount'].dropna()
+    south = df[df['zone'] == 'South']['sales_amount'].dropna()
+
+    print(f"North: mean={north.mean():.2f}, n={len(north)}")
+    print(f"South: mean={south.mean():.2f}, n={len(south)}")
+
+    # --- Check normality first (Shapiro-Wilk for n < 5000) ---
+    _, p_north = stats.shapiro(north.sample(min(200, len(north)), random_state=42))
+    _, p_south = stats.shapiro(south.sample(min(200, len(south)), random_state=42))
+    print(f"Normality p-values: North={p_north:.4f}, South={p_south:.4f}")
+
+    # --- If normal: use t-test. If not: use Mann-Whitney U ---
+    if p_north > 0.05 and p_south > 0.05:
+        stat, p_value = stats.ttest_ind(north, south, equal_var=False)  # Welch's t-test
+        test_name = "Welch's t-test"
+    else:
+        stat, p_value = stats.mannwhitneyu(north, south, alternative='two-sided')
+        test_name = "Mann-Whitney U"
+
+    alpha = 0.05
+    print(f"\n{test_name}: stat={stat:.4f}, p={p_value:.4f}")
+    print(f"Conclusion: {'REJECT H₀ — significant difference' if p_value < alpha else 'FAIL TO REJECT H₀ — no significant difference'}")
+    ```
+
+    #### Decision tree:
+    - Data is normal + equal variance → Student's t-test
+    - Data is normal + unequal variance → Welch's t-test
+    - Data is NOT normal → Mann-Whitney U (non-parametric)
+    - More than 2 groups → ANOVA (parametric) or Kruskal-Wallis (non-parametric)
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Regression Analysis
+
+    Quantifying the relationship between variables — and understanding which factors drive an outcome.
+
+    ```python
+    import statsmodels.api as sm
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    # ---- Prepare data ----
+    features = ['sales_qty', 'profit_margin', 'customer_total_revenue', 'is_weekend']
+    target   = 'sales_amount'
+
+    X = df[features].copy()
+    y = df[target].copy()
+
+    # Add constant for intercept
+    X_sm = sm.add_constant(X)
+
+    # ---- OLS Regression ----
+    model = sm.OLS(y, X_sm).fit()
+    print(model.summary())
+
+    # ---- Key outputs to interpret ----
+    print("\nCoefficients:")
+    print(model.params.round(4))
+    print(f"\nR-squared: {model.rsquared:.4f}")
+    print(f"Adj R-squared: {model.rsquared_adj:.4f}")
+    print(f"F-statistic p-value: {model.f_pvalue:.6f}")
+
+    # ---- Residual diagnostics ----
+    residuals = model.resid
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    # Residuals vs Fitted
+    axes[0].scatter(model.fittedvalues, residuals, alpha=0.4, color='steelblue')
+    axes[0].axhline(0, color='red', linestyle='--')
+    axes[0].set_xlabel('Fitted Values')
+    axes[0].set_ylabel('Residuals')
+    axes[0].set_title('Residuals vs Fitted')
+
+    # Q-Q plot (normality of residuals)
+    sm.qqplot(residuals, line='s', ax=axes[1], alpha=0.4)
+    axes[1].set_title('Q-Q Plot of Residuals')
+
+    plt.tight_layout()
+    plt.show()
+    ```
+
+    #### How to read the summary:
+    - **p-value < 0.05** for a coefficient → that feature significantly affects the target
+    - **R-squared** → proportion of variance explained (higher = better fit)
+    - **Residuals vs Fitted** should look random — any pattern means the model is missing something
+    - **Q-Q plot** should be roughly linear — confirms residuals are normally distributed
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### A/B Testing
+
+    The statistical engine behind product decisions — did the new feature actually improve the metric?
+
+    ```python
+    from scipy.stats import chi2_contingency, ttest_ind
+    import numpy as np
+
+    # ---- Scenario: Did a new website layout increase purchases? ----
+    # Group A = control (old layout), Group B = treatment (new layout)
+
+    np.random.seed(42)
+    n_per_group = 1000
+
+    # Simulate data
+    group_a_converted = np.random.binomial(1, 0.12, n_per_group)  # 12% baseline CVR
+    group_b_converted = np.random.binomial(1, 0.15, n_per_group)  # 15% new layout CVR
+
+    print(f"Group A (Control):   {group_a_converted.sum()} / {n_per_group} = {group_a_converted.mean():.2%}")
+    print(f"Group B (Treatment): {group_b_converted.sum()} / {n_per_group} = {group_b_converted.mean():.2%}")
+    print(f"Observed lift: {(group_b_converted.mean() - group_a_converted.mean()) / group_a_converted.mean():.2%}")
+
+    # ---- Chi-square test for conversion rate ----
+    contingency_table = np.array([
+        [group_a_converted.sum(), n_per_group - group_a_converted.sum()],
+        [group_b_converted.sum(), n_per_group - group_b_converted.sum()]
+    ])
+    chi2, p_value, dof, expected = chi2_contingency(contingency_table)
+    print(f"\nChi-square: {chi2:.4f}, p-value: {p_value:.4f}")
+    print(f"Decision: {'Ship the new layout ✅' if p_value < 0.05 else 'Do not ship — not significant ❌'}")
+
+    # ---- Statistical Power check ----
+    from statsmodels.stats.power import NormalIndPower
+    power_analysis = NormalIndPower()
+    required_n = power_analysis.solve_power(
+        effect_size=0.1,
+        power=0.8,
+        alpha=0.05,
+        alternative='two-sided'
+    )
+    print(f"\nRequired sample size per group for 80% power: {int(required_n)}")
+    ```
+
+    #### A/B test checklist:
+    1. Define your **metric** and **minimum detectable effect** before running the test
+    2. Calculate **required sample size** (power analysis) before starting — don't peek and stop early
+    3. Run for full **business cycles** (min 1 week) to capture day-of-week effects
+    4. Use **chi-square** for conversion rates, **t-test** for continuous metrics (revenue, time on page)
+    5. **Segment analysis** after significance — the overall lift may hide segment-level insights
+
+  </Section>
+</Container>

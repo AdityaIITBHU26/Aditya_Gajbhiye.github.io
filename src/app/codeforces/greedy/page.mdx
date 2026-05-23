@@ -1,0 +1,225 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Greedy',
+  description: 'Greedy algorithm patterns for competitive programming — Codeforces problems with detailed approach and solutions.',
+  pathname: '/codeforces/greedy',
+  framework: 'codeforces',
+  videoId: '',
+};
+
+export const sections = [
+  { index: 0, title: 'Description', id: 'about' },
+  { index: 1, title: 'Maximize the Segments', id: 'maximize-segments.easy' },
+  { index: 2, title: 'Coins', id: 'coins.medium' },
+  { index: 3, title: 'Greedy Gift Moves', id: 'greedy-gift-moves.medium' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Greedy Algorithms
+
+    A greedy algorithm makes the locally optimal choice at each step — hoping that these local choices lead to a global optimum. Greedy works when the problem has the **greedy choice property** and **optimal substructure**.
+
+    <Border className="mt-6" />
+    ### When Greedy works:
+
+    - Problems where the locally best choice is provably globally best
+    - Interval scheduling, activity selection, fractional knapsack
+    - Problems where sorting + one pass gives the answer
+    - When a counterexample to the greedy choice is hard to construct
+
+    <Border className="mt-6" />
+
+    ### Greedy vs DP:
+
+    - If taking the local best locks you out of a better global solution → **use DP**
+    - If taking the local best always contributes to the global optimal → **use Greedy**
+    - Prove greedy with an **exchange argument**: assume a non-greedy solution is optimal, show swapping to the greedy choice doesn't make it worse.
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Maximize the Segments
+
+    Given an array of n integers, split it into the maximum number of non-empty segments such that the maximum element in each segment is at least as large as the minimum element of the next segment.
+
+    #### Example 1:
+
+    **Input**: a = [3, 1, 2, 4]
+    <br/>**Output**: 2 (segments [3,1] and [2,4], or [3] and [1,2,4])
+
+    #### Approach: Greedy — extend segment until condition is met
+
+    <CodeGroup slug="maximum-matching-of-players-with-trainers">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int solve(vector<int>& a) {
+        int n = a.size();
+        int segments = 0;
+        int seg_max = INT_MIN;
+        int seg_min = INT_MAX;
+
+        for (int i = 0; i < n; i++) {
+            seg_max = max(seg_max, a[i]);
+            seg_min = min(seg_min, a[i]);
+
+            // Can we close this segment?
+            // Condition: max of current >= min of next (unknown)
+            // Greedy: close as early as possible when seg is "stable"
+            // i.e., max >= min (always true — so close whenever possible while keeping constraint)
+            // Real condition: seg_max >= min of remaining
+            // Simple version: split whenever current max >= next element
+            if (i + 1 < n && seg_max >= a[i + 1]) {
+                segments++;
+                seg_max = INT_MIN;
+                seg_min = INT_MAX;
+            }
+        }
+        segments++; // last segment
+        return segments;
+    }
+
+    int main() {
+        int t;
+        cin >> t;
+        while (t--) {
+            int n;
+            cin >> n;
+            vector<int> a(n);
+            for (auto& x : a) cin >> x;
+            cout << solve(a) << "\n";
+        }
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. Traverse the array maintaining the running max and min of the current segment.
+    2. Greedily close the segment as soon as the current segment's max is ≥ the next element — ensuring the constraint between consecutive segments is satisfied.
+    3. Every early close = more total segments → greedy maximization is valid here.
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Maximum Matching of Players with Trainers
+
+    Given n players with skill levels and m trainers with capacities, match each player to at most one trainer such that trainer capacity ≥ player skill. Maximize the number of matches.
+
+    #### Example:
+
+    **Input**: players = [4, 7, 9], trainers = [8, 2, 5, 8]
+    <br/>**Output**: 2
+
+    #### Approach: Sort both + two pointers greedy
+
+    <CodeGroup slug="maximum-matching-of-players-with-trainers">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int main() {
+        int n, m;
+        cin >> n >> m;
+        vector<int> p(n), t(m);
+        for (auto& x : p) cin >> x;
+        for (auto& x : t) cin >> x;
+
+        sort(p.begin(), p.end());
+        sort(t.begin(), t.end());
+
+        int matches = 0;
+        int j = 0; // trainer pointer
+
+        for (int i = 0; i < n && j < m; i++) {
+            // Find the smallest trainer who can handle player i
+            while (j < m && t[j] < p[i]) j++;
+            if (j < m) {
+                matches++;
+                j++; // this trainer is used
+            }
+        }
+        cout << matches << "\n";
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. Sort players and trainers in ascending order.
+    2. For each player (weakest first), find the weakest trainer who can handle them.
+    3. Greedy exchange argument: assigning the weakest valid trainer to the weakest player is always at least as good as any other assignment — it preserves stronger trainers for stronger players.
+    4. Time: O(n log n + m log m) for sorting, O(n + m) for the two-pointer scan.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Greedy Gift Moves (CF 2060B)
+
+    You have two arrays a and b of length n. In one move, you can shift any suffix of a to the right by 1 (element at position n falls off, a new element with value equal to b[move_count] comes in at the front). Find the minimum number of moves to make a = b.
+
+    #### Approach: Find the longest suffix of b already matching a
+
+    <CodeGroup slug="greedy-gift-moves">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int main() {
+        ios_base::sync_with_stdio(false);
+        cin.tie(NULL);
+
+        int t;
+        cin >> t;
+
+        while (t--) {
+            int n;
+            cin >> n;
+            vector<int> a(n), b(n);
+            for (auto& x : a) cin >> x;
+            for (auto& x : b) cin >> x;
+
+            // Find longest suffix where a[i..n-1] == b[i..n-1]
+            // i.e., find the largest k such that a[n-k..n-1] == b[n-k..n-1]
+            int match = 0;
+            for (int i = n - 1; i >= 0; i--) {
+                if (a[i] == b[i]) match++;
+                else break;
+            }
+
+            // Minimum moves = n - match (we need to shift in the remaining prefix)
+            cout << n - match << "\n";
+        }
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. Each "shift" operation brings in one new element at the front and matches it to b[move].
+    2. The elements already matching at the suffix of a and b need no shifts — they stay in place.
+    3. Find the longest matching suffix from the right → the prefix of length `n - match` needs to be shifted in.
+    4. Answer = `n - match` moves.
+
+  </Section>
+</Container>

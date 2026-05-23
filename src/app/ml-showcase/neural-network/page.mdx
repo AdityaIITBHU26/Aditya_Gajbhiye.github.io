@@ -1,0 +1,248 @@
+import { Border, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Neural Networks',
+  description: 'Neural network implementation patterns — from scratch in NumPy to training with modern frameworks, including the Genetic Algorithm car project.',
+  pathname: '/ml-showcase/neural-networks',
+  framework: 'ml',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'NN from Scratch', id: 'nn-from-scratch' },
+  { index: 2, title: 'Genetic Algorithm Car', id: 'genetic-algo' },
+  { index: 3, title: 'Training Tips', id: 'training-tips' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Neural Networks
+
+    Understanding neural networks from the ground up — implementing forward pass, backpropagation, and gradient descent in pure NumPy before using any framework. Then applying the same concepts in the Genetic Algorithm car project (neuroevolution, no backprop).
+
+    <Border className="mt-6" />
+    ### Why implement from scratch:
+
+    - Forces you to understand what frameworks are actually doing
+    - Debugging is much easier when you built every layer yourself
+    - Neuroevolution (genetic algorithms) requires direct weight manipulation — no autograd
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Neural Network from Scratch in NumPy
+
+    A 3-layer neural network (input → hidden → output) with sigmoid activation and MSE loss.
+
+    ```python
+    import numpy as np
+
+    class NeuralNetwork:
+        def __init__(self, layer_sizes, learning_rate=0.01):
+            self.lr = learning_rate
+            self.weights = []
+            self.biases  = []
+            for i in range(len(layer_sizes) - 1):
+                # He initialization for ReLU / Xavier for sigmoid
+                w = np.random.randn(layer_sizes[i], layer_sizes[i+1]) * np.sqrt(2 / layer_sizes[i])
+                b = np.zeros((1, layer_sizes[i+1]))
+                self.weights.append(w)
+                self.biases.append(b)
+
+        @staticmethod
+        def sigmoid(z):
+            return 1 / (1 + np.exp(-np.clip(z, -500, 500)))
+
+        @staticmethod
+        def sigmoid_derivative(a):
+            return a * (1 - a)
+
+        def forward(self, X):
+            self.activations = [X]
+            for w, b in zip(self.weights, self.biases):
+                z = self.activations[-1] @ w + b
+                a = self.sigmoid(z)
+                self.activations.append(a)
+            return self.activations[-1]
+
+        def backward(self, X, y):
+            m = X.shape[0]
+            delta = (self.activations[-1] - y) * self.sigmoid_derivative(self.activations[-1])
+            for i in reversed(range(len(self.weights))):
+                dW = (self.activations[i].T @ delta) / m
+                dB = delta.mean(axis=0, keepdims=True)
+                if i > 0:
+                    delta = (delta @ self.weights[i].T) * self.sigmoid_derivative(self.activations[i])
+                self.weights[i] -= self.lr * dW
+                self.biases[i]  -= self.lr * dB
+
+        def train(self, X, y, epochs=1000, verbose=True):
+            for epoch in range(epochs):
+                y_hat = self.forward(X)
+                loss  = np.mean((y_hat - y) ** 2)
+                self.backward(X, y)
+                if verbose and epoch % 100 == 0:
+                    print(f"Epoch {epoch:4d} | Loss: {loss:.6f}")
+
+    # ---- Usage ----
+    nn = NeuralNetwork(layer_sizes=[4, 8, 4, 1], learning_rate=0.05)
+    nn.train(X_train, y_train, epochs=500)
+    predictions = nn.forward(X_test)
+    ```
+
+    #### What this teaches:
+    - The weights matrix shape convention: `(input_dim, output_dim)`
+    - Forward pass = matrix multiply + activation, chained per layer
+    - Backward pass = chain rule applied layer by layer, updating weights by gradient descent
+    - `np.clip` in sigmoid prevents overflow for large negative inputs
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Genetic Algorithm Car — Neuroevolution
+
+    From the 2D Car project: training a neural network using a genetic algorithm instead of backpropagation. Each car's NN weights are encoded as a genome and evolved across generations.
+
+    ```python
+    import numpy as np
+
+    class CarBrain:
+        """Neural network for a single car — weights encoded as flat genome."""
+
+        def __init__(self, input_size=5, hidden_size=8, output_size=2):
+            self.input_size  = input_size
+            self.hidden_size = hidden_size
+            self.output_size = output_size
+            self.genome_size = (
+                input_size * hidden_size +   # W1
+                hidden_size +                # b1
+                hidden_size * output_size +  # W2
+                output_size                  # b2
+            )
+            self.genome = np.random.randn(self.genome_size) * 0.5
+
+        def decode_genome(self):
+            """Unpack flat genome into weight matrices."""
+            idx = 0
+            W1 = self.genome[idx : idx + self.input_size * self.hidden_size].reshape(self.input_size, self.hidden_size)
+            idx += self.input_size * self.hidden_size
+            b1 = self.genome[idx : idx + self.hidden_size]
+            idx += self.hidden_size
+            W2 = self.genome[idx : idx + self.hidden_size * self.output_size].reshape(self.hidden_size, self.output_size)
+            idx += self.hidden_size * self.output_size
+            b2 = self.genome[idx : idx + self.output_size]
+            return W1, b1, W2, b2
+
+        def predict(self, sensor_inputs):
+            """Forward pass: sensor distances → steering, throttle."""
+            W1, b1, W2, b2 = self.decode_genome()
+            x  = np.array(sensor_inputs)
+            h  = np.tanh(x @ W1 + b1)
+            out = np.tanh(h @ W2 + b2)
+            return out  # [steering (-1 to 1), throttle (0 to 1)]
+
+
+    class GeneticPopulation:
+        """Manages a population of cars and evolves them each generation."""
+
+        def __init__(self, pop_size=50, mutation_rate=0.1, mutation_strength=0.3):
+            self.pop_size         = pop_size
+            self.mutation_rate    = mutation_rate
+            self.mutation_strength = mutation_strength
+            self.population       = [CarBrain() for _ in range(pop_size)]
+
+        def evolve(self, fitness_scores):
+            """Select top 20%, crossover, mutate → new generation."""
+            ranked = sorted(zip(fitness_scores, self.population),
+                            key=lambda x: x[0], reverse=True)
+            elite_n = max(2, self.pop_size // 5)
+            elites  = [car for _, car in ranked[:elite_n]]
+
+            new_population = elites[:]  # carry elites unchanged
+            while len(new_population) < self.pop_size:
+                p1, p2 = np.random.choice(elites, 2, replace=False)
+                child  = CarBrain()
+                # Single-point crossover
+                cut    = np.random.randint(1, child.genome_size)
+                child.genome = np.concatenate([p1.genome[:cut], p2.genome[cut:]])
+                # Mutation
+                mask   = np.random.rand(child.genome_size) < self.mutation_rate
+                child.genome[mask] += np.random.randn(mask.sum()) * self.mutation_strength
+                new_population.append(child)
+
+            self.population = new_population
+            best_fitness = ranked[0][0]
+            return best_fitness
+    ```
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Neural Network Training Tips
+
+    Hard-won lessons from implementing NNs from scratch and debugging training instabilities.
+
+    #### 1. Weight Initialization matters enormously
+
+    ```python
+    # Too small → vanishing gradients (deep networks learn nothing)
+    # Too large → exploding gradients (NaN loss)
+    # He init (best for ReLU):
+    w = np.random.randn(fan_in, fan_out) * np.sqrt(2 / fan_in)
+    # Xavier init (best for sigmoid/tanh):
+    w = np.random.randn(fan_in, fan_out) * np.sqrt(1 / fan_in)
+    ```
+
+    #### 2. Gradient clipping for stability
+
+    ```python
+    # In the backward pass, clip gradients before weight update
+    max_norm = 5.0
+    for i in range(len(self.weights)):
+        norm = np.linalg.norm(self.weights[i])
+        if norm > max_norm:
+            self.weights[i] = self.weights[i] * (max_norm / norm)
+    ```
+
+    #### 3. Learning rate schedule
+
+    ```python
+    # Decay learning rate over epochs
+    initial_lr = 0.1
+    decay      = 0.001
+    for epoch in range(epochs):
+        lr = initial_lr / (1 + decay * epoch)
+        # use lr in weight update
+    ```
+
+    #### 4. Batch training vs full-batch
+
+    ```python
+    # Mini-batch gradient descent (standard approach)
+    batch_size = 32
+    for i in range(0, len(X_train), batch_size):
+        X_batch = X_train[i : i + batch_size]
+        y_batch = y_train[i : i + batch_size]
+        self.forward(X_batch)
+        self.backward(X_batch, y_batch)
+    ```
+
+    #### 5. When loss stops decreasing:
+    - Try lower learning rate (10× reduction)
+    - Check for vanishing gradients (print gradient norms each epoch)
+    - Add more neurons or a layer
+    - Check for data normalization — inputs in wildly different scales break training
+
+  </Section>
+</Container>

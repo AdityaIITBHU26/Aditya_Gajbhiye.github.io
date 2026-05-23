@@ -1,0 +1,199 @@
+import { Border, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Jupyter Notebooks',
+  description: 'End-to-end data science project notebooks — from raw data to trained model, with clean structure and reproducible results.',
+  pathname: '/ds-showcase/jupyter-notebooks',
+  framework: 'ds',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Notebook Structure', id: 'notebook-structure' },
+  { index: 2, title: 'Feature Engineering', id: 'feature-engineering' },
+  { index: 3, title: 'Model Pipeline', id: 'model-pipeline' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Jupyter Notebooks
+
+    Jupyter Notebooks are the standard environment for data science projects — combining code, visualizations, and documentation in a single reproducible document. These patterns show how to structure a professional DS notebook that is easy to follow and reproduce.
+
+    <Border className="mt-6" />
+    ### Notebook Sections (standard structure):
+
+    1. Problem Statement & Objective
+    2. Import Libraries
+    3. Load & Preview Data
+    4. EDA (Exploratory Data Analysis)
+    5. Data Cleaning & Preprocessing
+    6. Feature Engineering
+    7. Model Building
+    8. Evaluation
+    9. Conclusion & Next Steps
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Professional Notebook Structure
+
+    A clean notebook is a reproducible notebook. Here is the standard import block and environment setup used across all DS projects.
+
+    ```python
+    # ============================================================
+    # 0. IMPORTS & CONFIGURATION
+    # ============================================================
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from sklearn.model_selection import train_test_split, cross_val_score
+    from sklearn.preprocessing import StandardScaler, LabelEncoder
+    from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+    import warnings
+    warnings.filterwarnings('ignore')
+
+    # Reproducibility
+    RANDOM_STATE = 42
+    np.random.seed(RANDOM_STATE)
+
+    # Display settings
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.float_format', '{:.4f}'.format)
+    plt.style.use('seaborn-v0_8-whitegrid')
+
+    print("Libraries loaded ✓")
+    print(f"NumPy: {np.__version__} | Pandas: {pd.__version__}")
+    ```
+
+    ```python
+    # ============================================================
+    # 1. LOAD DATA
+    # ============================================================
+    df = pd.read_csv('../data/raw/dataset.csv')
+    print(f"Shape: {df.shape}")
+    print(f"Memory: {df.memory_usage(deep=True).sum() / 1e6:.2f} MB")
+    df.head()
+    ```
+
+    #### Why this matters:
+    - `RANDOM_STATE = 42` everywhere ensures results are reproducible across runs and machines.
+    - `warnings.filterwarnings('ignore')` keeps output clean for presentation — remove during debugging.
+    - Printing library versions helps collaborators reproduce your environment exactly.
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Feature Engineering
+
+    The step that most impacts model performance — creating new meaningful features from existing ones.
+
+    ```python
+    # ============================================================
+    # 5. FEATURE ENGINEERING
+    # ============================================================
+
+    df_fe = df.copy()
+
+    # --- Date features ---
+    df_fe['order_date'] = pd.to_datetime(df_fe['order_date'])
+    df_fe['year']        = df_fe['order_date'].dt.year
+    df_fe['month']       = df_fe['order_date'].dt.month
+    df_fe['quarter']     = df_fe['order_date'].dt.quarter
+    df_fe['day_of_week'] = df_fe['order_date'].dt.dayofweek
+    df_fe['is_weekend']  = (df_fe['day_of_week'] >= 5).astype(int)
+
+    # --- Interaction features ---
+    df_fe['revenue_per_unit'] = df_fe['sales_amount'] / (df_fe['sales_qty'] + 1)
+    df_fe['profit_per_unit']  = df_fe['profit_margin'] / (df_fe['sales_qty'] + 1)
+
+    # --- Aggregation features (customer-level stats) ---
+    customer_stats = df_fe.groupby('customer_code').agg(
+        customer_total_revenue = ('sales_amount', 'sum'),
+        customer_order_count   = ('order_id', 'nunique'),
+        customer_avg_order     = ('sales_amount', 'mean'),
+    ).reset_index()
+    df_fe = df_fe.merge(customer_stats, on='customer_code', how='left')
+
+    # --- Log transform skewed features ---
+    for col in ['sales_amount', 'customer_total_revenue']:
+        df_fe[f'log_{col}'] = np.log1p(df_fe[col])
+
+    # --- Encode categoricals ---
+    le = LabelEncoder()
+    for col in ['market_code', 'product_type', 'customer_type']:
+        df_fe[f'{col}_enc'] = le.fit_transform(df_fe[col].astype(str))
+
+    print(f"Features: {df.shape[1]} → {df_fe.shape[1]} (+{df_fe.shape[1]-df.shape[1]})")
+    ```
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Scikit-Learn Model Pipeline
+
+    Using sklearn's `Pipeline` to chain preprocessing and model steps — preventing data leakage and making deployment clean.
+
+    ```python
+    from sklearn.pipeline import Pipeline
+    from sklearn.compose import ColumnTransformer
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
+    from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import GridSearchCV
+
+    # ---- Define feature types ----
+    numeric_features = ['sales_qty', 'revenue_per_unit', 'log_sales_amount']
+    categorical_features = ['product_type', 'customer_type']
+
+    # ---- Preprocessing ----
+    preprocessor = ColumnTransformer(transformers=[
+        ('num', StandardScaler(), numeric_features),
+        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features),
+    ])
+
+    # ---- Full Pipeline ----
+    pipeline = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('model', RandomForestClassifier(random_state=RANDOM_STATE))
+    ])
+
+    # ---- Train / Test Split ----
+    X = df_fe[numeric_features + categorical_features]
+    y = df_fe['target']
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y
+    )
+
+    # ---- Fit ----
+    pipeline.fit(X_train, y_train)
+
+    # ---- Evaluate ----
+    y_pred = pipeline.predict(X_test)
+    print(classification_report(y_test, y_pred))
+    print(f"ROC-AUC: {roc_auc_score(y_test, pipeline.predict_proba(X_test)[:,1]):.4f}")
+
+    # ---- Cross-validation ----
+    cv_scores = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc')
+    print(f"CV ROC-AUC: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
+    ```
+
+    #### Why Pipeline matters:
+    - `StandardScaler` fitted only on `X_train` — never sees test data during training. Without Pipeline, it's easy to accidentally leak test statistics into preprocessing.
+    - `ColumnTransformer` handles numeric and categorical features in parallel — clean, no manual loops.
+    - The whole pipeline can be saved with `joblib.dump(pipeline, 'model.pkl')` and loaded for inference.
+
+  </Section>
+</Container>

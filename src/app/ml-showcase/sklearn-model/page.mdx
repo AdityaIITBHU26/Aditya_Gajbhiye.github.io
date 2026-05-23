@@ -1,0 +1,206 @@
+import { Border, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Scikit-Learn',
+  description: 'Machine learning model building with Scikit-Learn — classification, regression, cross-validation, and hyperparameter tuning patterns.',
+  pathname: '/ml-showcase/sklearn-models',
+  framework: 'ml',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Classification Pipeline', id: 'classification' },
+  { index: 2, title: 'Hyperparameter Tuning', id: 'hyperparameter-tuning' },
+  { index: 3, title: 'Model Evaluation', id: 'model-evaluation' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Scikit-Learn Models
+
+    Scikit-learn is the backbone of practical ML in Python. These patterns cover the full model-building workflow — from preprocessing to final evaluation — the way it's actually done in industry projects.
+
+    <Border className="mt-6" />
+    ### Models Covered:
+
+    - Logistic Regression (baseline classifier)
+    - Random Forest (ensemble, robust)
+    - Gradient Boosting / XGBoost (state-of-the-art tabular)
+    - Cross-validation and GridSearchCV
+    - ROC-AUC, F1, Precision-Recall evaluation
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Classification Pipeline — Comparing Models
+
+    Always start with a baseline, then improve. Here is the standard pattern for comparing classifiers on the same data.
+
+    ```python
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+    from sklearn.svm import SVC
+    from sklearn.model_selection import cross_val_score, StratifiedKFold
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.pipeline import Pipeline
+    import pandas as pd
+
+    # ---- Define models ----
+    models = {
+        'Logistic Regression': Pipeline([
+            ('scaler', StandardScaler()),
+            ('model', LogisticRegression(max_iter=1000, random_state=42))
+        ]),
+        'Random Forest': Pipeline([
+            ('model', RandomForestClassifier(n_estimators=100, random_state=42))
+        ]),
+        'Gradient Boosting': Pipeline([
+            ('model', GradientBoostingClassifier(n_estimators=100, random_state=42))
+        ]),
+    }
+
+    # ---- Cross-validated comparison ----
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    results = {}
+
+    for name, model in models.items():
+        scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='roc_auc', n_jobs=-1)
+        results[name] = {'mean': scores.mean(), 'std': scores.std()}
+        print(f"{name:<25} ROC-AUC: {scores.mean():.4f} ± {scores.std():.4f}")
+
+    # ---- Pick best and fit on full train set ----
+    best_model_name = max(results, key=lambda k: results[k]['mean'])
+    best_model = models[best_model_name]
+    best_model.fit(X_train, y_train)
+    print(f"\nBest model: {best_model_name}")
+    ```
+
+    #### Why StratifiedKFold:
+    - For imbalanced classes (e.g., 90% / 10% split), regular K-Fold may put all rare cases in one fold.
+    - Stratified ensures each fold has the same class ratio as the full dataset.
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Hyperparameter Tuning
+
+    Default model parameters are rarely optimal. Two approaches: GridSearchCV (exhaustive) and RandomizedSearchCV (faster for large spaces).
+
+    ```python
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    import numpy as np
+
+    # ---- Parameter grid ----
+    param_dist = {
+        'model__n_estimators':      [100, 200, 300, 500],
+        'model__max_depth':         [None, 5, 10, 20],
+        'model__min_samples_split': [2, 5, 10],
+        'model__min_samples_leaf':  [1, 2, 4],
+        'model__max_features':      ['sqrt', 'log2', None],
+        'model__class_weight':      [None, 'balanced'],
+    }
+
+    pipeline = Pipeline([
+        ('model', RandomForestClassifier(random_state=42))
+    ])
+
+    # ---- RandomizedSearchCV ----
+    search = RandomizedSearchCV(
+        pipeline,
+        param_distributions=param_dist,
+        n_iter=50,              # try 50 random combos instead of all
+        cv=StratifiedKFold(5),
+        scoring='roc_auc',
+        n_jobs=-1,
+        random_state=42,
+        verbose=1
+    )
+    search.fit(X_train, y_train)
+
+    print(f"Best ROC-AUC: {search.best_score_:.4f}")
+    print(f"Best params:  {search.best_params_}")
+
+    # ---- CV results as DataFrame ----
+    cv_results = pd.DataFrame(search.cv_results_)
+    print(cv_results[['params', 'mean_test_score', 'std_test_score']]
+          .sort_values('mean_test_score', ascending=False)
+          .head(10))
+    ```
+
+    #### Rule of thumb: RandomizedSearch with 50 iterations finds 90% of what GridSearch finds at 5% of the compute cost.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Complete Model Evaluation
+
+    ROC-AUC alone is not enough. Always look at the full picture — especially with imbalanced classes.
+
+    ```python
+    from sklearn.metrics import (
+        classification_report, confusion_matrix,
+        roc_auc_score, roc_curve,
+        precision_recall_curve, average_precision_score
+    )
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    best = search.best_estimator_
+    y_pred       = best.predict(X_test)
+    y_pred_proba = best.predict_proba(X_test)[:, 1]
+
+    # ---- Classification report ----
+    print(classification_report(y_test, y_pred, digits=4))
+    print(f"ROC-AUC: {roc_auc_score(y_test, y_pred_proba):.4f}")
+
+    # ---- Confusion Matrix ----
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    cm = confusion_matrix(y_test, y_pred, normalize='true')
+    sns.heatmap(cm, annot=True, fmt='.2%', cmap='Blues', ax=axes[0])
+    axes[0].set_title('Normalized Confusion Matrix')
+
+    # ---- ROC Curve ----
+    fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+    axes[1].plot(fpr, tpr, label=f'AUC = {roc_auc_score(y_test, y_pred_proba):.3f}')
+    axes[1].plot([0,1],[0,1],'k--', label='Random')
+    axes[1].set_xlabel('FPR'); axes[1].set_ylabel('TPR')
+    axes[1].set_title('ROC Curve'); axes[1].legend()
+
+    # ---- Precision-Recall Curve ----
+    prec, rec, _ = precision_recall_curve(y_test, y_pred_proba)
+    ap = average_precision_score(y_test, y_pred_proba)
+    axes[2].plot(rec, prec, label=f'AP = {ap:.3f}')
+    axes[2].set_xlabel('Recall'); axes[2].set_ylabel('Precision')
+    axes[2].set_title('Precision-Recall Curve'); axes[2].legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    # ---- Feature Importance ----
+    rf = best.named_steps['model']
+    fi = pd.Series(rf.feature_importances_, index=feature_names).sort_values(ascending=False)
+    fi.head(10).plot(kind='barh', title='Top 10 Feature Importances', color='steelblue')
+    plt.tight_layout(); plt.show()
+    ```
+
+    #### When to use which metric:
+    - **ROC-AUC** → balanced classes, general performance
+    - **Precision-Recall / AP** → imbalanced classes (fraud detection, rare disease)
+    - **F1-score** → when you care equally about false positives and false negatives
+    - **Confusion matrix** → always — see actual counts of what the model gets wrong
+
+  </Section>
+</Container>

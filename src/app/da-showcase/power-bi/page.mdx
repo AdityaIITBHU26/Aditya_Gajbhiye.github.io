@@ -1,0 +1,205 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Power BI',
+  description: 'Power BI dashboard development with DAX formulas, data modelling, and real-world business intelligence patterns.',
+  pathname: '/da-showcase/power-bi',
+  framework: 'da',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Sales Insights Dashboard', id: 'sales-insights' },
+  { index: 2, title: 'DAX Formula Patterns', id: 'dax-patterns' },
+  { index: 3, title: 'Data Modelling', id: 'data-modelling' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Power BI
+
+    Power BI is Microsoft's business analytics platform — used widely in enterprise data teams. These showcases cover real DAX patterns, star schema data modelling, and dashboard design techniques used in the Sales Insights project.
+
+    <Border className="mt-6" />
+    ### When to use Power BI:
+
+    - Enterprise BI connected to SQL Server, Azure, or SharePoint
+    - Building self-service reports for non-technical stakeholders
+    - Scheduled data refresh from live databases
+    - Complex calculated measures using DAX
+
+    <Border className="mt-6" />
+    ### Core Skills Demonstrated:
+
+    - Star schema data modelling with relationships
+    - DAX measures for KPIs, time intelligence, and running totals
+    - Power Query (M language) for ETL and data cleaning
+    - Report design: card visuals, slicers, drill-through pages
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Sales Insights Dashboard
+
+    Built for AtliQ Hardware — tracking FY2017–2020 sales across 15+ cities and 38 stores in India, with dynamic KPI cards, trend lines, and city-level breakdowns.
+
+    #### Dashboard Pages:
+
+    **Page 1 — Revenue Overview**
+    - KPI Cards: Total Revenue, Total Sales Qty, Profit Margin %
+    - Line Chart: Monthly revenue trend with year slicer
+    - Bar Chart: Top 5 cities by revenue
+
+    **Page 2 — Profit Analysis**
+    - Scatter: Sales Qty vs Profit Margin per product
+    - Matrix: City × Product Category with conditional formatting
+    - Waterfall: Revenue contribution by region
+
+    **Page 3 — Store Performance**
+    - Bar chart: All 38 stores ranked by revenue
+    - Color coding: Red = below target, Green = above target
+
+    #### Key Measures:
+
+    ```dax
+    Total Revenue = SUM(transactions[sales_amount])
+    ```
+
+    ```dax
+    Profit Margin % =
+    DIVIDE(
+        SUM(transactions[profit_margin]),
+        SUM(transactions[sales_amount]),
+        0
+    )
+    ```
+
+    ```dax
+    Revenue LY =
+    CALCULATE(
+        [Total Revenue],
+        SAMEPERIODLASTYEAR(date[date])
+    )
+    ```
+
+    ```dax
+    YoY Growth % =
+    DIVIDE(
+        [Total Revenue] - [Revenue LY],
+        [Revenue LY],
+        BLANK()
+    )
+    ```
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### DAX Formula Patterns
+
+    The three most important DAX patterns for any Data Analyst.
+
+    #### Pattern 1 — Running Total
+
+    ```dax
+    Running Total Revenue =
+    CALCULATE(
+        [Total Revenue],
+        FILTER(
+            ALL(date[date]),
+            date[date] <= MAX(date[date])
+        )
+    )
+    ```
+
+    #### Pattern 2 — Top N with RANKX
+
+    ```dax
+    City Revenue Rank =
+    RANKX(
+        ALL(markets[markets_name]),
+        [Total Revenue],
+        ,
+        DESC,
+        DENSE
+    )
+    ```
+
+    Use with a visual-level filter: keep only where `City Revenue Rank <= 5` to show top 5 cities dynamically.
+
+    #### Pattern 3 — Dynamic Target vs Actual
+
+    ```dax
+    Target Achievement % =
+    DIVIDE(
+        [Total Revenue],
+        [Revenue Target],
+        0
+    )
+    ```
+
+    ```dax
+    Status =
+    IF(
+        [Target Achievement %] >= 1,
+        "✅ On Track",
+        "❌ Below Target"
+    )
+    ```
+
+    Use the Status measure as a color rule in conditional formatting on table visuals — no manual color-coding needed.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Data Modelling — Star Schema
+
+    The Sales Insights project uses a star schema — one central fact table surrounded by dimension tables. This is the standard for fast, flexible analytics.
+
+    #### Schema Design:
+
+    ```
+    FACT TABLE
+    ─────────────────────────────────────────
+    transactions
+      ├── product_code (FK → products)
+      ├── customer_code (FK → customers)
+      ├── market_code (FK → markets)
+      ├── order_date (FK → date)
+      ├── sales_amount
+      ├── sales_qty
+      └── profit_margin
+
+    DIMENSION TABLES
+    ─────────────────────────────────────────
+    products       → product_code, product_type
+    customers      → customer_code, custmer_name, customer_type
+    markets        → market_code, markets_name, zone
+    date           → date, year, month_name, cy_date
+    ```
+
+    #### Power Query Cleaning Steps:
+
+    1. Filter `sales_amount <= 0` — removes invalid or test transactions
+    2. Normalize currency: convert USD amounts to INR
+       ```
+       = Table.AddColumn(Source, "norm_sales_amount",
+           each if [currency] = "USD" then [sales_amount] * 75
+           else [sales_amount])
+       ```
+    3. Extract Year and Month from date column for time intelligence
+    4. Remove duplicates from dimension tables on the key column
+
+    **Relationship type:** All dimensions connect to the fact table via single-direction, many-to-one relationships — this prevents ambiguous filter propagation and keeps DAX measures predictable.
+
+  </Section>
+</Container>

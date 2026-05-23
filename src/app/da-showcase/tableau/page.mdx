@@ -1,0 +1,151 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Tableau',
+  description: 'Tableau dashboard design and data storytelling — from connecting data sources to publishing interactive views.',
+  pathname: '/da-showcase/tableau',
+  framework: 'da',
+  embedUrl: 'https://public.tableau.com/views/YOUR-DASHBOARD-LINK',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Sales KPI Dashboard', id: 'sales-kpi-dashboard' },
+  { index: 2, title: 'Customer Segmentation', id: 'customer-segmentation' },
+  { index: 3, title: 'Trend Analysis', id: 'trend-analysis' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Tableau
+
+    Tableau is the industry-standard tool for visual analytics. These showcases demonstrate dashboard design patterns, calculated fields, and interactive filter techniques used in real Data Analyst workflows.
+
+    <Border className="mt-6" />
+    ### When to use Tableau:
+
+    - Publishing interactive dashboards for business stakeholders
+    - Connecting live to databases (MySQL, PostgreSQL, BigQuery)
+    - Building drill-down reports with dynamic filters and parameters
+    - Creating geospatial maps and time-series trend views
+
+    <Border className="mt-6" />
+    ### Core Concepts Covered:
+
+    - Calculated fields and LOD (Level of Detail) expressions
+    - Dashboard Actions: filter, highlight, URL
+    - Table calculations: running total, percent of total, rank
+    - Blending multiple data sources
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Sales KPI Dashboard
+
+    A multi-page Tableau dashboard tracking Revenue, Profit Margin, Units Sold, and Return Rate across regions and product categories — similar to the AtliQ Sales Insights project.
+
+    #### Key Calculated Fields Used:
+
+    **Profit Margin %**
+    ```
+    SUM([Profit]) / SUM([Revenue])
+    ```
+
+    **YoY Revenue Growth**
+    ```
+    (SUM([Revenue]) - LOOKUP(SUM([Revenue]), -1)) / ABS(LOOKUP(SUM([Revenue]), -1))
+    ```
+
+    **Revenue Rank by City (LOD)**
+    ```
+    RANK(SUM([Revenue]))
+    ```
+
+    #### Dashboard Design Choices:
+
+    - KPI cards at the top (Revenue, Profit %, Sales Qty) using BANs (Big Ass Numbers)
+    - Bar chart: Top 10 cities by revenue — sorted descending, colored by profit margin
+    - Line chart: Monthly revenue trend with a reference line at average
+    - Map view: Revenue density by state using filled map
+
+    #### Interactivity:
+
+    - Region filter → cascades to all charts simultaneously via Dashboard Action
+    - Clicking a city bar → highlights that city on the map
+    - Date range parameter → user adjusts time window from FY2017 to FY2020
+
+    **View on Tableau Public:** [YOUR-TABLEAU-PUBLIC-LINK]
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Customer Segmentation View
+
+    RFM (Recency, Frequency, Monetary) analysis visualized in Tableau — segmenting customers into Champions, At-Risk, Loyal, and Lost categories.
+
+    #### RFM Calculated Fields:
+
+    **Recency Score (days since last purchase)**
+    ```
+    DATEDIFF('day', MAX([Order Date]), TODAY())
+    ```
+
+    **Frequency (number of orders)**
+    ```
+    COUNTD([Order ID])
+    ```
+
+    **Monetary (total spend)**
+    ```
+    SUM([Sales])
+    ```
+
+    **RFM Segment Label**
+    ```
+    IF [Recency Score] <= 30 AND [Frequency Score] >= 4 AND [Monetary Score] >= 4
+    THEN "Champion"
+    ELSEIF [Recency Score] <= 90 AND [Frequency Score] >= 2
+    THEN "Loyal"
+    ELSEIF [Recency Score] > 180
+    THEN "Lost"
+    ELSE "At Risk"
+    END
+    ```
+
+    #### Visualization: Scatter plot — Frequency (x) vs Monetary (y), colored by Segment, sized by Recency. Instantly shows which customers need re-engagement campaigns.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Trend Analysis with Forecasting
+
+    Using Tableau's built-in exponential smoothing forecast on a time-series revenue line chart — projecting 3 months ahead with confidence bands.
+
+    #### Steps:
+
+    1. Build a line chart: Order Date (Month) on Columns, SUM(Revenue) on Rows
+    2. Right-click the chart → **Forecast** → **Show Forecast**
+    3. Set forecast length to 3 months, model: Automatic (Tableau picks best fit)
+    4. Enable confidence interval bands at 95%
+
+    #### Table Calculation — Moving Average (smoothing noise):
+
+    ```
+    WINDOW_AVG(SUM([Revenue]), -2, 0)
+    ```
+    This computes a 3-month moving average, smoothing out seasonal spikes so the trend is clearly visible to non-technical stakeholders.
+
+    #### Annotation tip: Use **Mark Labels** → show only the max and min points on the trend line to draw attention to the best and worst months without cluttering the chart.
+
+  </Section>
+</Container>

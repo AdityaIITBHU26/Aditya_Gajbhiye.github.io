@@ -1,0 +1,220 @@
+import { Border, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Kaggle Approach',
+  description: 'Competition-grade ML strategy — feature engineering, ensembling, and the systematic approach used to build leaderboard-competitive models on Kaggle.',
+  pathname: '/ml-showcase/kaggle-approach',
+  framework: 'ml',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Competition Strategy', id: 'strategy' },
+  { index: 2, title: 'Advanced Feature Eng.', id: 'feature-engineering' },
+  { index: 3, title: 'Ensembling', id: 'ensembling' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Kaggle Approach
+
+    Kaggle competitions force rigorous ML thinking — you get one metric, one leaderboard, and no shortcuts. The patterns here are used to systematically build competitive models: structured EDA, feature engineering, model stacking, and ensembling.
+
+    <Border className="mt-6" />
+    ### Kaggle profile: [YOUR-KAGGLE-USERNAME](https://www.kaggle.com/YOUR-KAGGLE-USERNAME)
+
+    <Border className="mt-6" />
+    ### Competition workflow:
+
+    1. Read problem statement + evaluation metric carefully
+    2. EDA: understand data types, missing values, target distribution
+    3. Baseline model (LightGBM defaults) — establish a floor
+    4. Feature engineering — this is where leaderboard gains come from
+    5. Hyperparameter tuning on best model
+    6. Cross-validation strategy that mirrors the leaderboard split
+    7. Ensemble top models
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Competition Strategy
+
+    The same framework used across tabular ML competitions.
+
+    ```python
+    import lightgbm as lgb
+    from sklearn.model_selection import KFold
+    from sklearn.metrics import roc_auc_score
+    import numpy as np
+    import pandas as pd
+
+    # ---- Load competition data ----
+    train = pd.read_csv('train.csv')
+    test  = pd.read_csv('test.csv')
+    target_col = 'target'
+
+    # ---- Identify feature types ----
+    cat_features = [c for c in train.columns if train[c].dtype == 'object']
+    num_features = [c for c in train.columns if c not in cat_features + [target_col, 'id']]
+
+    # ---- Encode categoricals for LightGBM ----
+    for col in cat_features:
+        train[col] = train[col].astype('category')
+        test[col]  = test[col].astype('category')
+
+    X = train[num_features + cat_features]
+    y = train[target_col]
+
+    # ---- Out-of-fold cross-validation ----
+    N_FOLDS = 5
+    kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=42)
+    oof_predictions = np.zeros(len(X))
+    test_predictions = np.zeros(len(test))
+
+    for fold, (train_idx, val_idx) in enumerate(kf.split(X)):
+        X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+        y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+
+        model = lgb.LGBMClassifier(
+            n_estimators=1000,
+            learning_rate=0.05,
+            num_leaves=31,
+            cat_smooth=10,
+            random_state=42,
+            verbose=-1
+        )
+        model.fit(
+            X_train, y_train,
+            eval_set=[(X_val, y_val)],
+            callbacks=[lgb.early_stopping(50, verbose=False)]
+        )
+        oof_predictions[val_idx] = model.predict_proba(X_val)[:, 1]
+        test_predictions += model.predict_proba(test[num_features + cat_features])[:, 1] / N_FOLDS
+
+        fold_auc = roc_auc_score(y_val, oof_predictions[val_idx])
+        print(f"Fold {fold+1} AUC: {fold_auc:.4f}")
+
+    print(f"\nOOF AUC: {roc_auc_score(y, oof_predictions):.4f}")
+
+    # ---- Submission ----
+    submission = pd.DataFrame({'id': test['id'], target_col: test_predictions})
+    submission.to_csv('submission.csv', index=False)
+    ```
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Advanced Feature Engineering
+
+    The biggest source of leaderboard gains — features that encode domain knowledge the model can't learn on its own.
+
+    ```python
+    def engineer_features(df):
+        df = df.copy()
+
+        # ---- Target encoding (with smoothing to prevent leakage) ----
+        # Use only in cross-validation, fitted on train fold only
+        global_mean = y_train.mean()
+        smoothing = 10
+        for col in cat_features:
+            stats = y_train.groupby(X_train[col]).agg(['mean', 'count'])
+            smoothed = (stats['mean'] * stats['count'] + global_mean * smoothing) \
+                       / (stats['count'] + smoothing)
+            df[f'{col}_target_enc'] = df[col].map(smoothed).fillna(global_mean)
+
+        # ---- Aggregation features ----
+        for group_col in ['category', 'region']:
+            for agg_col in ['price', 'quantity']:
+                for func in ['mean', 'std', 'min', 'max']:
+                    col_name = f'{group_col}_{agg_col}_{func}'
+                    agg = X_train.groupby(group_col)[agg_col].transform(func)
+                    df[col_name] = df[group_col].map(
+                        X_train.groupby(group_col)[agg_col].agg(func)
+                    )
+
+        # ---- Ratio features ----
+        df['price_to_category_mean'] = df['price'] / (df['category_price_mean'] + 1e-6)
+        df['qty_to_region_mean']     = df['quantity'] / (df['region_quantity_mean'] + 1e-6)
+
+        # ---- Interaction features ----
+        df['price_x_qty']   = df['price'] * df['quantity']
+        df['log_price_qty'] = np.log1p(df['price_x_qty'])
+
+        return df
+    ```
+
+    #### Key rules:
+    - **Target encoding must be done inside cross-validation folds** — fitting on the full training set causes data leakage and inflated CV scores.
+    - Aggregation features (group mean, std) encode "how does this row compare to its group" — powerful for tabular data.
+    - Always check if engineered features actually improve OOF score before adding them permanently.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Ensembling
+
+    Combining predictions from multiple models — almost always better than any single model in competition settings.
+
+    ```python
+    import numpy as np
+    from scipy.optimize import minimize
+    from sklearn.metrics import roc_auc_score
+
+    # ---- Collect OOF predictions from multiple models ----
+    oof_lgbm   = np.load('oof_lgbm.npy')    # LightGBM OOF
+    oof_xgb    = np.load('oof_xgb.npy')     # XGBoost OOF
+    oof_cat    = np.load('oof_catboost.npy') # CatBoost OOF
+    oof_rf     = np.load('oof_rf.npy')       # Random Forest OOF
+
+    test_lgbm  = np.load('test_lgbm.npy')
+    test_xgb   = np.load('test_xgb.npy')
+    test_cat   = np.load('test_catboost.npy')
+    test_rf    = np.load('test_rf.npy')
+
+    oof_preds  = np.column_stack([oof_lgbm, oof_xgb, oof_cat, oof_rf])
+    test_preds = np.column_stack([test_lgbm, test_xgb, test_cat, test_rf])
+
+    # ---- Simple average ----
+    oof_avg  = oof_preds.mean(axis=1)
+    test_avg = test_preds.mean(axis=1)
+    print(f"Simple average OOF AUC: {roc_auc_score(y, oof_avg):.4f}")
+
+    # ---- Optimized weighted average ----
+    def neg_auc(weights):
+        w = np.array(weights)
+        w = w / w.sum()  # normalize to sum=1
+        blended = oof_preds @ w
+        return -roc_auc_score(y, blended)
+
+    result = minimize(
+        neg_auc,
+        x0=[0.25, 0.25, 0.25, 0.25],
+        method='Nelder-Mead',
+        options={'maxiter': 1000}
+    )
+    best_weights = result.x / result.x.sum()
+    print(f"Optimal weights: {best_weights.round(3)}")
+
+    oof_blend  = oof_preds  @ best_weights
+    test_blend = test_preds @ best_weights
+    print(f"Weighted blend OOF AUC: {roc_auc_score(y, oof_blend):.4f}")
+    ```
+
+    #### Ensembling rules:
+    - Models must be **diverse** — same algorithm with different seeds gives minimal gain. LightGBM + XGBoost + Neural Net + Random Forest = strong ensemble.
+    - Optimize weights using **OOF predictions only** — using test predictions to optimize weights is leakage.
+    - **Rank averaging** (convert probabilities to ranks first, then average) is more robust than probability averaging when models are calibrated differently.
+
+  </Section>
+</Container>

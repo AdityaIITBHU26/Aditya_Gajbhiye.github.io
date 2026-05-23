@@ -1,0 +1,183 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'EDA with Python',
+  description: 'Exploratory Data Analysis patterns using Pandas, Matplotlib, and Seaborn — uncovering structure, outliers, and relationships in raw data.',
+  pathname: '/ds-showcase/eda-python',
+  framework: 'ds',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Data Profiling', id: 'data-profiling' },
+  { index: 2, title: 'Distribution Analysis', id: 'distribution-analysis' },
+  { index: 3, title: 'Correlation & Relationships', id: 'correlation' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # EDA with Python
+
+    Exploratory Data Analysis is the first — and most important — step in any data science project. A rigorous EDA tells you what your data actually is, before you try to model it. These patterns are used across all DS/DA projects.
+
+    <Border className="mt-6" />
+    ### EDA Checklist:
+
+    - Shape, dtypes, missing values, duplicates
+    - Distribution of each feature (skew, outliers)
+    - Correlation between features and the target
+    - Class imbalance (for classification problems)
+    - Temporal patterns (if time-series data)
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Data Profiling
+
+    The first 10 lines of code you run on any new dataset.
+
+    ```python
+    import pandas as pd
+    import numpy as np
+
+    df = pd.read_csv('data.csv')
+
+    # Shape and types
+    print(f"Shape: {df.shape}")
+    print(df.dtypes)
+    print(df.head())
+
+    # Missing values — count and percentage
+    missing = pd.DataFrame({
+        'count': df.isnull().sum(),
+        'pct': (df.isnull().sum() / len(df) * 100).round(2)
+    })
+    print(missing[missing['count'] > 0].sort_values('pct', ascending=False))
+
+    # Duplicates
+    print(f"Duplicate rows: {df.duplicated().sum()}")
+
+    # Statistical summary
+    print(df.describe(include='all'))
+
+    # Unique values per column (useful for categoricals)
+    for col in df.select_dtypes(include='object').columns:
+        print(f"{col}: {df[col].nunique()} unique | Top: {df[col].value_counts().index[0]}")
+    ```
+
+    #### Explanation:
+
+    1. `df.isnull().sum()` + percentage tells you if missing data is random or systematic — systemic missingness (>30%) often needs domain knowledge to handle.
+    2. `df.duplicated()` finds exact row duplicates — common in transaction data with repeated imports.
+    3. `describe(include='all')` shows count, mean, std for numerics AND count, unique, top for categoricals in one call.
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Distribution Analysis
+
+    Understanding how each feature is distributed — is it normal, skewed, bimodal? Are there outliers?
+
+    ```python
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    # --- Histogram for all numeric columns ---
+    numeric_cols = df.select_dtypes(include=np.number).columns
+    df[numeric_cols].hist(bins=30, figsize=(16, 10), color='steelblue', edgecolor='white')
+    plt.suptitle('Feature Distributions', fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+    # --- Box plots to surface outliers ---
+    fig, axes = plt.subplots(1, len(numeric_cols), figsize=(4 * len(numeric_cols), 5))
+    for i, col in enumerate(numeric_cols):
+        sns.boxplot(y=df[col], ax=axes[i], color='coral')
+        axes[i].set_title(col)
+    plt.tight_layout()
+    plt.show()
+
+    # --- Skewness check ---
+    skew = df[numeric_cols].skew().sort_values(ascending=False)
+    print("Highly skewed features (|skew| > 1):")
+    print(skew[skew.abs() > 1])
+
+    # --- Log-transform skewed features ---
+    for col in skew[skew.abs() > 1].index:
+        df[col + '_log'] = np.log1p(df[col])
+        print(f"Log-transformed: {col} → skew {df[col].skew():.2f} → {df[col+'_log'].skew():.2f}")
+    ```
+
+    #### Explanation:
+
+    1. Histograms reveal shape — normal, right-skewed (most ML models prefer near-normal), or bimodal (possibly two sub-populations).
+    2. Box plots expose outliers — points beyond 1.5×IQR. Decide: are they errors (drop) or genuine extremes (keep/cap)?
+    3. `np.log1p()` transforms right-skewed features — commonly needed for revenue, salary, population data.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Correlation & Relationships
+
+    Finding which features are related to each other — and to the target variable.
+
+    ```python
+    # --- Correlation heatmap ---
+    plt.figure(figsize=(12, 8))
+    corr = df[numeric_cols].corr()
+    mask = np.triu(np.ones_like(corr, dtype=bool))  # upper triangle only
+    sns.heatmap(
+        corr,
+        mask=mask,
+        annot=True,
+        fmt='.2f',
+        cmap='coolwarm',
+        center=0,
+        linewidths=0.5
+    )
+    plt.title('Correlation Matrix')
+    plt.tight_layout()
+    plt.show()
+
+    # --- Target correlation (for supervised learning) ---
+    target = 'sales_amount'
+    target_corr = corr[target].drop(target).sort_values(ascending=False)
+    print("Correlation with target:")
+    print(target_corr)
+
+    # --- Pair plot for top correlated features ---
+    top_features = target_corr.abs().nlargest(4).index.tolist() + [target]
+    sns.pairplot(df[top_features], diag_kind='kde', plot_kws={'alpha': 0.5})
+    plt.show()
+
+    # --- Categorical vs target (box plot) ---
+    for cat_col in df.select_dtypes(include='object').columns:
+        plt.figure(figsize=(10, 4))
+        order = df.groupby(cat_col)[target].median().sort_values(ascending=False).index
+        sns.boxplot(data=df, x=cat_col, y=target, order=order)
+        plt.xticks(rotation=45)
+        plt.title(f'{cat_col} vs {target}')
+        plt.tight_layout()
+        plt.show()
+    ```
+
+    #### Explanation:
+
+    1. **Masked heatmap** — showing only the lower triangle avoids duplicate information and makes the matrix easier to scan.
+    2. **Target correlation** — features with |corr| > 0.3 with the target are strong candidates for the model. Features correlated with each other (multicollinearity) may need dropping or PCA.
+    3. **Pair plot** — shows pairwise relationships and individual distributions in one grid. Clusters in scatter plots suggest the data has natural groupings.
+    4. **Categorical box plot** — comparing target distribution across categories reveals which categories matter most (e.g., which city zone drives highest sales).
+
+  </Section>
+</Container>

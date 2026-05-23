@@ -1,0 +1,216 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'SQL Analytics',
+  description: 'Advanced SQL patterns for data analysis — window functions, CTEs, subqueries, and real business intelligence queries.',
+  pathname: '/da-showcase/sql-analytics',
+  framework: 'da',
+};
+
+export const sections = [
+  { index: 0, title: 'Overview', id: 'about' },
+  { index: 1, title: 'Window Functions', id: 'window-functions' },
+  { index: 2, title: 'CTE Patterns', id: 'cte-patterns' },
+  { index: 3, title: 'Business Queries', id: 'business-queries' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # SQL Analytics
+
+    SQL is the core language of every data analyst. These showcases go beyond basic SELECT — covering window functions, CTEs, and the complex multi-table queries used in real business intelligence work.
+
+    <Border className="mt-6" />
+    ### When these patterns apply:
+
+    - Ranking customers, products, or stores within groups
+    - Computing running totals and moving averages directly in SQL
+    - Breaking complex logic into readable, testable CTE steps
+    - Writing the queries behind dashboards (Power BI, Tableau)
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Window Functions
+
+    Window functions compute values across a set of rows related to the current row — without collapsing the result into groups like GROUP BY does.
+
+    #### Example 1 — Rank stores by revenue within each zone
+
+    ```sql
+    SELECT
+        m.markets_name,
+        m.zone,
+        SUM(t.sales_amount) AS total_revenue,
+        RANK() OVER (
+            PARTITION BY m.zone
+            ORDER BY SUM(t.sales_amount) DESC
+        ) AS rank_in_zone
+    FROM transactions t
+    JOIN markets m ON t.market_code = m.market_code
+    GROUP BY m.markets_name, m.zone
+    ORDER BY m.zone, rank_in_zone;
+    ```
+
+    #### Example 2 — Running total of revenue by month
+
+    ```sql
+    SELECT
+        DATE_FORMAT(order_date, '%Y-%m') AS month,
+        SUM(sales_amount) AS monthly_revenue,
+        SUM(SUM(sales_amount)) OVER (
+            ORDER BY DATE_FORMAT(order_date, '%Y-%m')
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS running_total
+    FROM transactions
+    GROUP BY month
+    ORDER BY month;
+    ```
+
+    #### Example 3 — 3-month moving average
+
+    ```sql
+    SELECT
+        month,
+        monthly_revenue,
+        AVG(monthly_revenue) OVER (
+            ORDER BY month
+            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+        ) AS moving_avg_3m
+    FROM (
+        SELECT
+            DATE_FORMAT(order_date, '%Y-%m') AS month,
+            SUM(sales_amount) AS monthly_revenue
+        FROM transactions
+        GROUP BY month
+    ) monthly_data
+    ORDER BY month;
+    ```
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### CTE Patterns
+
+    Common Table Expressions (CTEs) make complex queries readable by breaking them into named, reusable sub-steps.
+
+    #### Example — RFM Customer Segmentation
+
+    ```sql
+    WITH rfm_base AS (
+        SELECT
+            customer_code,
+            DATEDIFF(CURDATE(), MAX(order_date))  AS recency_days,
+            COUNT(DISTINCT order_id)              AS frequency,
+            SUM(sales_amount)                     AS monetary
+        FROM transactions
+        GROUP BY customer_code
+    ),
+
+    rfm_scores AS (
+        SELECT
+            customer_code,
+            recency_days,
+            frequency,
+            monetary,
+            NTILE(5) OVER (ORDER BY recency_days ASC)  AS r_score,
+            NTILE(5) OVER (ORDER BY frequency DESC)    AS f_score,
+            NTILE(5) OVER (ORDER BY monetary DESC)     AS m_score
+        FROM rfm_base
+    ),
+
+    rfm_segments AS (
+        SELECT *,
+            CASE
+                WHEN r_score >= 4 AND f_score >= 4 AND m_score >= 4 THEN 'Champion'
+                WHEN r_score >= 3 AND f_score >= 3                   THEN 'Loyal'
+                WHEN r_score <= 2 AND f_score >= 3                   THEN 'At Risk'
+                WHEN r_score <= 2 AND f_score <= 2                   THEN 'Lost'
+                ELSE 'Potential'
+            END AS segment
+        FROM rfm_scores
+    )
+
+    SELECT segment, COUNT(*) AS customer_count, ROUND(AVG(monetary), 2) AS avg_spend
+    FROM rfm_segments
+    GROUP BY segment
+    ORDER BY avg_spend DESC;
+    ```
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Business Intelligence Queries
+
+    Real queries used in the Sales Insights project — the kind that feed directly into Power BI and Tableau dashboards.
+
+    #### Query 1 — Revenue by City, filtered to Top 5
+
+    ```sql
+    SELECT
+        m.markets_name AS city,
+        SUM(t.sales_amount) AS total_revenue,
+        COUNT(DISTINCT t.order_id) AS total_orders,
+        ROUND(SUM(t.profit_margin) / SUM(t.sales_amount) * 100, 2) AS profit_margin_pct
+    FROM transactions t
+    JOIN markets m ON t.market_code = m.market_code
+    WHERE t.sales_amount > 0
+      AND YEAR(t.order_date) = 2020
+    GROUP BY m.markets_name
+    ORDER BY total_revenue DESC
+    LIMIT 5;
+    ```
+
+    #### Query 2 — Month-over-Month revenue change
+
+    ```sql
+    WITH monthly AS (
+        SELECT
+            DATE_FORMAT(order_date, '%Y-%m') AS month,
+            SUM(sales_amount) AS revenue
+        FROM transactions
+        WHERE sales_amount > 0
+        GROUP BY month
+    )
+    SELECT
+        month,
+        revenue,
+        LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
+        ROUND(
+            (revenue - LAG(revenue) OVER (ORDER BY month))
+            / LAG(revenue) OVER (ORDER BY month) * 100,
+        2) AS mom_growth_pct
+    FROM monthly
+    ORDER BY month;
+    ```
+
+    #### Query 3 — Product performance matrix
+
+    ```sql
+    SELECT
+        p.product_type,
+        COUNT(DISTINCT t.product_code)          AS product_count,
+        SUM(t.sales_qty)                        AS total_units_sold,
+        ROUND(SUM(t.sales_amount), 2)           AS total_revenue,
+        ROUND(AVG(t.profit_margin) * 100, 2)   AS avg_profit_margin_pct,
+        RANK() OVER (ORDER BY SUM(t.sales_amount) DESC) AS revenue_rank
+    FROM transactions t
+    JOIN products p ON t.product_code = p.product_code
+    WHERE t.sales_amount > 0
+    GROUP BY p.product_type
+    ORDER BY revenue_rank;
+    ```
+
+  </Section>
+</Container>
