@@ -1,0 +1,286 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Graph Algorithms',
+  description: 'Graph traversal, shortest paths, and connectivity — BFS, DFS, Dijkstra patterns with Codeforces problems.',
+  pathname: '/codeforces/graphs',
+  framework: 'codeforces',
+};
+
+export const sections = [
+  { index: 0, title: 'Description', id: 'about' },
+  { index: 1, title: 'BFS Shortest Path', id: 'bfs-shortest-path.easy' },
+  { index: 2, title: 'Dijkstra', id: 'dijkstra.medium' },
+  { index: 3, title: 'Cycle Detection', id: 'cycle-detection.medium' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Graph Algorithms
+
+    Graphs model relationships — cities and roads, dependencies, networks. These patterns cover the most frequently tested graph algorithms in competitive programming and technical interviews.
+
+    <Border className="mt-6" />
+    ### Algorithm Selection Guide:
+
+    - **Unweighted shortest path** → BFS (O(V+E))
+    - **Weighted shortest path, non-negative weights** → Dijkstra (O((V+E) log V))
+    - **Weighted, negative weights** → Bellman-Ford (O(VE))
+    - **All pairs shortest path** → Floyd-Warshall (O(V³))
+    - **Connected components** → BFS/DFS or Union-Find
+    - **Cycle detection (directed)** → DFS with colors
+    - **Topological sort** → DFS post-order or Kahn's BFS
+
+    <Border className="mt-6" />
+
+    ### Graph representation:
+
+    ```cpp
+    // Adjacency list (most common for sparse graphs)
+    int n; // number of nodes
+    vector<vector<int>> adj(n + 1);          // unweighted
+    vector<vector<pair<int,int>>> wadj(n+1); // weighted: {neighbor, weight}
+    ```
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### BFS Shortest Path (Unweighted)
+
+    Find the shortest path (in number of edges) from source to all nodes — or detect if a path exists.
+
+    #### Problem: Given a grid with obstacles, find the minimum steps from top-left to bottom-right.
+
+    <CodeGroup slug="shortest-path-in-binary-matrix">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int shortestPath(vector<vector<int>>& grid) {
+        int n = grid.size(), m = grid[0].size();
+        if (grid[0][0] == 1 || grid[n-1][m-1] == 1) return -1;
+
+        vector<vector<int>> dist(n, vector<int>(m, INT_MAX));
+        queue<pair<int,int>> q;
+        q.push({0, 0});
+        dist[0][0] = 1;
+
+        int dx[] = {-1,-1,-1, 0, 0, 1, 1, 1};
+        int dy[] = {-1, 0, 1,-1, 1,-1, 0, 1};
+
+        while (!q.empty()) {
+            auto [x, y] = q.front(); q.pop();
+
+            if (x == n-1 && y == m-1) return dist[x][y];
+
+            for (int d = 0; d < 8; d++) {
+                int nx = x + dx[d], ny = y + dy[d];
+                if (nx >= 0 && nx < n && ny >= 0 && ny < m
+                    && grid[nx][ny] == 0 && dist[nx][ny] == INT_MAX) {
+                    dist[nx][ny] = dist[x][y] + 1;
+                    q.push({nx, ny});
+                }
+            }
+        }
+        return -1;
+    }
+
+    int main() {
+        vector<vector<int>> grid = {{0,0,0},{1,1,0},{1,1,0}};
+        cout << shortestPath(grid) << "\n"; // 4
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. BFS explores nodes level by level — so the first time we reach a node, it's via the shortest path.
+    2. Mark distance immediately when pushing to the queue, not when popping — prevents re-adding the same node.
+    3. The 8-directional array covers all neighbors in a grid (4-directional = remove the diagonal pairs).
+    4. Time: O(n × m), Space: O(n × m).
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Dijkstra's Algorithm
+
+    Find shortest paths from source to all nodes in a weighted graph with non-negative edge weights. Exactly as used in the Travel Route Planner project.
+
+    <CodeGroup slug="network-delay-time">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    const int INF = 1e9;
+
+    vector<int> dijkstra(int src, int n, vector<vector<pair<int,int>>>& adj) {
+        // dist[v] = shortest distance from src to v
+        vector<int> dist(n + 1, INF);
+        dist[src] = 0;
+
+        // min-heap: {distance, node}
+        priority_queue<pair<int,int>,
+                       vector<pair<int,int>>,
+                       greater<>> pq;
+        pq.push({0, src});
+
+        while (!pq.empty()) {
+            auto [d, u] = pq.top(); pq.pop();
+
+            // Stale entry — already found a shorter path
+            if (d > dist[u]) continue;
+
+            for (auto [v, w] : adj[u]) {
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    pq.push({dist[v], v});
+                }
+            }
+        }
+        return dist;
+    }
+
+    // Reconstruct path
+    vector<int> get_path(int src, int dst,
+                         vector<int>& dist,
+                         vector<vector<pair<int,int>>>& adj) {
+        // Run Dijkstra storing predecessors
+        int n = dist.size() - 1;
+        vector<int> prev(n + 1, -1);
+        // (re-run with prev tracking or store during main Dijkstra)
+
+        vector<int> path;
+        for (int v = dst; v != -1; v = prev[v])
+            path.push_back(v);
+        reverse(path.begin(), path.end());
+        return path;
+    }
+
+    int main() {
+        int n = 5, src = 1;
+        vector<vector<pair<int,int>>> adj(n + 1);
+        // Add edges: adj[u].push_back({v, weight})
+        adj[1].push_back({2, 10});
+        adj[1].push_back({3, 3});
+        adj[3].push_back({2, 4});
+        adj[2].push_back({4, 2});
+        adj[3].push_back({4, 8});
+
+        vector<int> dist = dijkstra(src, n, adj);
+
+        for (int i = 1; i <= n; i++) {
+            if (dist[i] == INF) cout << i << ": unreachable\n";
+            else cout << i << ": " << dist[i] << "\n";
+        }
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. Priority queue (min-heap) always processes the node with the smallest known distance next.
+    2. **Lazy deletion**: when popping a node, check if `d > dist[u]` — if yes, this is a stale entry from before we found a shorter path; skip it.
+    3. Relaxation: if going through `u` gives `v` a shorter distance, update and push to queue.
+    4. Time: O((V + E) log V), Space: O(V + E).
+    5. **Does NOT work with negative edges** — use Bellman-Ford instead.
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Cycle Detection in Directed Graph
+
+    Detect if a directed graph contains a cycle — crucial for dependency resolution and topological sort validity.
+
+    <CodeGroup slug="course-schedule">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    // Color states
+    const int WHITE = 0; // unvisited
+    const int GRAY  = 1; // currently in DFS stack
+    const int BLACK = 2; // fully processed
+
+    bool dfs(int u, vector<vector<int>>& adj, vector<int>& color) {
+        color[u] = GRAY;
+
+        for (int v : adj[u]) {
+            if (color[v] == GRAY) return true;  // back edge → cycle!
+            if (color[v] == WHITE && dfs(v, adj, color)) return true;
+        }
+
+        color[u] = BLACK;
+        return false;
+    }
+
+    bool hasCycle(int n, vector<vector<int>>& adj) {
+        vector<int> color(n, WHITE);
+        for (int u = 0; u < n; u++) {
+            if (color[u] == WHITE) {
+                if (dfs(u, adj, color)) return true;
+            }
+        }
+        return false;
+    }
+
+    // Topological Sort (only valid if no cycle)
+    vector<int> topoSort(int n, vector<vector<int>>& adj) {
+        vector<int> color(n, WHITE);
+        vector<int> order;
+
+        function<void(int)> dfs = [&](int u) {
+            color[u] = GRAY;
+            for (int v : adj[u]) {
+                if (color[v] == WHITE) dfs(v);
+            }
+            color[u] = BLACK;
+            order.push_back(u); // post-order = reverse topological order
+        };
+
+        for (int u = 0; u < n; u++)
+            if (color[u] == WHITE) dfs(u);
+
+        reverse(order.begin(), order.end());
+        return order;
+    }
+
+    int main() {
+        int n = 4;
+        vector<vector<int>> adj(n);
+        adj[0].push_back(1);
+        adj[1].push_back(2);
+        adj[2].push_back(3);
+        adj[3].push_back(1); // cycle: 1→2→3→1
+
+        cout << (hasCycle(n, adj) ? "Cycle detected" : "No cycle") << "\n";
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. **Three-color DFS**: WHITE = unvisited, GRAY = currently being explored (on the recursion stack), BLACK = done.
+    2. A **back edge** — an edge from a GRAY node to another GRAY node — means we've found a cycle (reached a node already on the current path).
+    3. An edge to a BLACK node is safe — that node is already fully explored with no cycle through it.
+    4. After the DFS, the post-order traversal reversed gives the topological order — valid only if no cycle was found.
+    5. For undirected graphs, cycle detection is simpler: BFS/DFS with a parent pointer.
+
+  </Section>
+</Container>

@@ -1,0 +1,250 @@
+import { Border, CodeGroup, Container, Section } from '@/components';
+
+export const showcaseData = {
+  title: 'Dynamic Programming',
+  description: 'DP patterns for competitive programming — memoization, tabulation, and classic Codeforces problems with full solutions.',
+  pathname: '/codeforces/dynamic-programming',
+  framework: 'codeforces',
+};
+
+export const sections = [
+  { index: 0, title: 'Description', id: 'about' },
+  { index: 1, title: 'Min Cost Climbing Stairs', id: 'min-cost-climbing.easy' },
+  { index: 2, title: 'Knapsack 0/1', id: 'knapsack.medium' },
+  { index: 3, title: 'Longest Common Subsequence', id: 'longest-common-subsequence.medium' },
+];
+
+export const metadata = {
+  title: `${showcaseData.title}`,
+  description: showcaseData.description,
+};
+
+<Container>
+  <Section id={sections[0].id}>
+    # Dynamic Programming
+
+    Dynamic Programming solves problems by breaking them into overlapping subproblems and storing results to avoid recomputation. The key insight: identify a **state** that completely describes a subproblem, write the **recurrence**, and fill it bottom-up or top-down.
+
+    <Border className="mt-6" />
+    ### DP Problem Recognition:
+
+    - "Count the number of ways to..."
+    - "Find the minimum/maximum cost to..."
+    - "Is it possible to reach/achieve..."
+    - Overlapping subproblems (recursive solution recomputes same inputs)
+    - Optimal substructure (optimal solution built from optimal sub-solutions)
+
+    <Border className="mt-6" />
+
+    ### Template:
+
+    ```cpp
+    // Top-down (memoization)
+    map<State, Answer> memo;
+    Answer dp(State s) {
+        if (base_case(s)) return base_answer;
+        if (memo.count(s)) return memo[s];
+        Answer ans = /* recurrence over subproblems */;
+        return memo[s] = ans;
+    }
+    ```
+
+  </Section>
+
+  <Section id={sections[1].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Min Cost Climbing Stairs
+
+    You are given an integer array `cost` where `cost[i]` is the cost of the i-th step. You can climb 1 or 2 steps at a time. Find the minimum cost to reach the top (beyond the last index).
+
+    #### Example:
+
+    **Input**: cost = [10, 15, 20]
+    <br/>**Output**: 15
+    <br/>**Explanation**: Start at index 1, pay 15, jump 2 steps to top.
+
+    <CodeGroup slug="min-cost-climbing-stairs">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int minCostClimbingStairs(vector<int>& cost) {
+        int n = cost.size();
+        // dp[i] = min cost to reach step i
+        vector<int> dp(n + 1, 0);
+
+        // base cases: can start at step 0 or step 1 for free
+        dp[0] = 0;
+        dp[1] = 0;
+
+        for (int i = 2; i <= n; i++) {
+            dp[i] = min(
+                dp[i - 1] + cost[i - 1],  // came from step i-1
+                dp[i - 2] + cost[i - 2]   // came from step i-2
+            );
+        }
+        return dp[n];
+    }
+
+    int main() {
+        vector<int> cost = {10, 15, 20};
+        cout << minCostClimbingStairs(cost) << "\n"; // 15
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. Define `dp[i]` = minimum cost to reach position `i` (the "top" is position `n`).
+    2. To reach `i`, you either came from `i-1` (paid `cost[i-1]`) or from `i-2` (paid `cost[i-2]`).
+    3. Recurrence: `dp[i] = min(dp[i-1] + cost[i-1], dp[i-2] + cost[i-2])`.
+    4. Answer is `dp[n]` — the top, which has no cost itself.
+    5. Space can be optimized to O(1) since we only need the last two values.
+
+  </Section>
+
+  <Section id={sections[2].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### 0/1 Knapsack
+
+    Given `n` items each with weight `w[i]` and value `v[i]`, and a knapsack of capacity `W`, find the maximum value you can fit. Each item can be taken at most once.
+
+    #### Example:
+
+    **Input**: weights = [1,3,4,5], values = [1,4,5,7], W = 7
+    <br/>**Output**: 9 (items with weight 3 and 4, values 4+5)
+
+    <CodeGroup slug="0-1-knapsack-problem">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int knapsack(int W, vector<int>& wt, vector<int>& val) {
+        int n = wt.size();
+        // dp[i][w] = max value using first i items with capacity w
+        vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+
+        for (int i = 1; i <= n; i++) {
+            for (int w = 0; w <= W; w++) {
+                // Option 1: don't take item i
+                dp[i][w] = dp[i - 1][w];
+                // Option 2: take item i (if it fits)
+                if (wt[i - 1] <= w) {
+                    dp[i][w] = max(dp[i][w],
+                                   dp[i - 1][w - wt[i - 1]] + val[i - 1]);
+                }
+            }
+        }
+        return dp[n][W];
+    }
+
+    // Space-optimized version O(W)
+    int knapsack_opt(int W, vector<int>& wt, vector<int>& val) {
+        int n = wt.size();
+        vector<int> dp(W + 1, 0);
+
+        for (int i = 0; i < n; i++) {
+            // Traverse W → wt[i] to avoid using item i twice
+            for (int w = W; w >= wt[i]; w--) {
+                dp[w] = max(dp[w], dp[w - wt[i]] + val[i]);
+            }
+        }
+        return dp[W];
+    }
+
+    int main() {
+        vector<int> wt  = {1, 3, 4, 5};
+        vector<int> val = {1, 4, 5, 7};
+        int W = 7;
+        cout << knapsack_opt(W, wt, val) << "\n"; // 9
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. State: `dp[i][w]` = best value using the first `i` items with exactly `w` capacity available.
+    2. For each item, two choices: skip it (`dp[i-1][w]`) or take it if it fits (`dp[i-1][w - wt[i]] + val[i]`).
+    3. Space optimization: since row `i` only depends on row `i-1`, use a 1D array — but traverse **right to left** so you don't accidentally use item `i` twice.
+    4. Time: O(n × W), Space optimized: O(W).
+
+  </Section>
+
+  <Section id={sections[3].id} className="pt-2">
+    <Border className="translate-y-5"/>
+
+    ### Longest Common Subsequence
+
+    Given two strings `s` and `t`, find the length of their longest common subsequence (not necessarily contiguous).
+
+    #### Example:
+
+    **Input**: s = "abcde", t = "ace"
+    <br/>**Output**: 3 ("ace" is a common subsequence)
+
+    <CodeGroup slug="longest-common-subsequence">
+
+    ```cpp
+    #include <bits/stdc++.h>
+    using namespace std;
+
+    int lcs(string& s, string& t) {
+        int m = s.size(), n = t.size();
+        // dp[i][j] = LCS of s[0..i-1] and t[0..j-1]
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s[i - 1] == t[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;  // characters match
+                } else {
+                    dp[i][j] = max(dp[i - 1][j],       // skip s[i]
+                                   dp[i][j - 1]);       // skip t[j]
+                }
+            }
+        }
+        return dp[m][n];
+    }
+
+    // Reconstruct the actual LCS string
+    string reconstruct_lcs(string& s, string& t, vector<vector<int>>& dp) {
+        string result = "";
+        int i = s.size(), j = t.size();
+        while (i > 0 && j > 0) {
+            if (s[i-1] == t[j-1]) {
+                result += s[i-1];
+                i--; j--;
+            } else if (dp[i-1][j] > dp[i][j-1]) {
+                i--;
+            } else {
+                j--;
+            }
+        }
+        reverse(result.begin(), result.end());
+        return result;
+    }
+
+    int main() {
+        string s = "abcde", t = "ace";
+        cout << lcs(s, t) << "\n"; // 3
+    }
+    ```
+
+    </CodeGroup>
+
+    #### Explanation:
+
+    1. State: `dp[i][j]` = length of LCS considering first `i` chars of `s` and first `j` chars of `t`.
+    2. If characters match: extend the LCS from `dp[i-1][j-1]`.
+    3. If they don't match: take the best of skipping one character from either string.
+    4. **Reconstruction**: backtrack through the dp table from `dp[m][n]` — go diagonally when characters matched, otherwise go in the direction of the larger value.
+    5. LCS is the foundation for Edit Distance, Diff algorithms, and DNA sequence alignment.
+
+  </Section>
+</Container>
