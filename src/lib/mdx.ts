@@ -1,10 +1,12 @@
 import glob from 'fast-glob';
 import { StaticImageData } from 'next/image';
 
-async function loadEntries<T extends { date?: string }>(directory: string, metaName: string): Promise<Array<MDXEntry<T>>> {
+// ── Generic loader — works for any MDX export shape ───────────────
+// Removed `extends { date?: string }` constraint — it broke Leetcode/Showcase types
+async function loadEntries<T>(directory: string, metaName: string): Promise<Array<MDXEntry<T>>> {
   const files = await Promise.all(
     (await glob('**/page.mdx', { cwd: `src/app/${directory}` })).map(async (filename) => {
-      let metadata = (await import(`../app/${directory}/${filename}`))[metaName] as T;
+      const metadata = (await import(`../app/${directory}/${filename}`))[metaName] as T;
       return {
         ...metadata,
         metadata,
@@ -12,8 +14,9 @@ async function loadEntries<T extends { date?: string }>(directory: string, metaN
       };
     })
   );
-  // Sort by date if available, otherwise keep file order
-  return files.sort((a, b) => {
+
+  // Sort by date if the entries have one, otherwise keep glob order
+  return files.sort((a: any, b: any) => {
     if (a.date && b.date) return b.date.localeCompare(a.date);
     return 0;
   });
@@ -21,7 +24,7 @@ async function loadEntries<T extends { date?: string }>(directory: string, metaN
 
 export type MDXEntry<T> = T & { href: string; metadata: T };
 
-// ---- App Projects ----
+// ── App Projects ──────────────────────────────────────────────────
 export interface App {
   date: string;
   industry: string;
@@ -34,15 +37,16 @@ export interface App {
   framework: string;
 }
 
-// ---- LeetCode / Codeforces ----
+// ── LeetCode ──────────────────────────────────────────────────────
 export interface Leetcode {
   title: string;
   description: string;
   pathname: string;
   framework: string;
+  videoId?: string;
 }
 
-// ---- Showcase (DA / DS / ML) ----
+// ── Showcase (DA / DS / ML / Codeforces) ──────────────────────────
 export interface Showcase {
   title: string;
   description: string;
@@ -51,7 +55,7 @@ export interface Showcase {
   embedUrl?: string;
 }
 
-// ---- Load functions ----
+// ── Load functions ─────────────────────────────────────────────────
 export function loadApps() {
   return loadEntries<App>('apps', 'appData');
 }
