@@ -33,7 +33,7 @@ export default function AboutMe() {
             </p>
           </div>
           <div className="flex-none mx-auto">
-            <Image className="rounded-full object-cover" src="/me.jpg" alt="" height={208} width={208} />
+            <Image className="rounded-full object-cover" src="/me.png" alt="" height={208} width={208} />
           </div>
         </div>
 
